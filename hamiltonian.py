@@ -73,7 +73,8 @@ class Hamiltonian(object):
             raise Exception("Can't handle custom fields yet.  Stay tuned!")
 
         valid_axes = ['X', 'Y', 'Z', 'ISOTROPIC']
-        self.field_axis = kwargs.pop('axis', 'Z').upper()
+        self.field_axis = kwargs.pop('axis').upper()
+        print(self.field_axis)
         if self.field_axis not in valid_axes:
             raise Exception("%s is not a valid field axis." % (self.field_axis))
         axis_index = {'X':0, 'Y':1, 'Z':2} # Translate axis to index
@@ -81,6 +82,9 @@ class Hamiltonian(object):
         self.field_strength = kwargs.pop('strength')
         if type(self.field_strength) is not float:
             raise Exception("Field strength must be of type float.")
+
+        print(f"Field axis: {self.field_axis}")
+        print(f"Field strength: {self.field_strength}")
 
         # Add the external field to the one-electron potential
 #        np.set_printoptions(precision=14)
