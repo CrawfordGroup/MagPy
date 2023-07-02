@@ -12,7 +12,6 @@ class helper_diis(object):
         self.diis_F.append(F.copy())
         e = X @ (F @ D @ S - (F @ D @ S).conj().T) @ X
         self.diis_errors.append(e)
-        print(np.linalg.norm(e))
 
     def extrapolate(self, F):
         if(self.max_diis == 0):
@@ -42,7 +41,6 @@ class helper_diis(object):
         A[-1] = -1
 
         c = np.linalg.solve(B, A)
-        print(np.linalg.norm(c))
 
         F[:,:] = 0
         for i in range(self.diis_size):

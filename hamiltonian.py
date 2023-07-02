@@ -31,7 +31,7 @@ class Hamiltonian(object):
         ## One-electron property integrals for adding multipole fields
 
         # Electric dipole integrals (length): -e r
-        self.mu = mints.ao_dipole()
+        self.mu = mints.so_dipole()
         for i in range(3):
             self.mu[i] = np.asarray(self.mu[i])
 
@@ -83,10 +83,17 @@ class Hamiltonian(object):
             raise Exception("Field strength must be of type float.")
 
         # Add the external field to the one-electron potential
+#        np.set_printoptions(precision=14)
+#        np.set_printoptions(suppress=True)
         if self.field_axis != 'ISOTROPIC':
             self.V = self.V - self.field_strength * field[axis_index[self.field_axis]]
+            print(self.V)
         else:
             self.V = self.V - self.field_strength * sum(field)/np.sqrt(3.0)
+
+        # Get the new nuclear repulsion energy with the field on
+        if self.field_type == 'ELECTRIC-DIPOLE':
+            self.molecule.
 
     def reset_V(self):
 

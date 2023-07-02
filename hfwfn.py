@@ -17,7 +17,7 @@ class hfwfn(object):
             raise Exception("MagPy is for closed-shell systems only at present.")
         self.ndocc = nelec//2;
 
-        # Determine nuclear repulsion energy
+        # Determine nuclear repulsion energy 
         self.enuc = H.molecule.nuclear_repulsion_energy()
 
         # Determine number of orbitals
@@ -46,7 +46,7 @@ class hfwfn(object):
         eps, Cp = np.linalg.eigh(Fp)
         C = X @ Cp
         C_occ = C[:,:self.ndocc]
-        D = C_occ.conjugate() @ C_occ.T
+        D = C_occ @ C_occ.T.conj()
 
         # Compute the initial-guess energy
         escf = contract('ij,ij->', D, (h+F))
@@ -75,7 +75,7 @@ class hfwfn(object):
             eps, Cp = np.linalg.eigh(Fp)
             C = X @ Cp
             C_occ = C[:,:self.ndocc]
-            D = C_occ.conjugate() @ C_occ.T
+            D = C_occ @ C_occ.T.conj()
 
             escf = contract('ij,ij->', D, (h+F))
 
@@ -92,4 +92,4 @@ class hfwfn(object):
         raise Exception("SCF iterations failed to converge in %d cycles." % (maxiter))
 
 #    def fix_phase(self, C):
-        
+

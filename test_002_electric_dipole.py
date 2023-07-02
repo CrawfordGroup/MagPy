@@ -52,3 +52,48 @@ rhf_e, rhf_wfn = psi4.energy('SCF', return_wfn=True)
 
 print("Mu_tot(z)   = %20.12f (Psi4)" % (psi4.variable('SCF DIPOLE')[2]))
 
+# Test on HF molecule
+psi4.set_options({'basis': 'cc-pVDZ',
+                  'scf_type': 'pk',
+                  'e_convergence': 1e-12,
+                  'd_convergence': 1e-12,
+                  'r_convergence': 1e-12})
+hf = """
+0 1
+F   0.00  0.00 -0.50
+H   0.00  0.00  0.50
+no_reorient
+nocom
+symmetry c1
+"""
+
+mol = psi4.geometry(hf)
+H = Hamiltonian(mol)
+scf = hfwfn(H)
+e_conv = 1e-13
+r_conv = 1e-13
+maxiter = 100
+escf, C = scf.solve_scf(e_conv, r_conv, maxiter)
+
+A = +0.001
+H.add_field(field='electric-dipole', field_axis='z', strength=A)
+escf_pos, C_pos = scf.solve_scf(e_conv, r_conv, maxiter)
+
+H.reset_V()
+H.add_field(field='electric-dipole', field_axis='z', strength=-A)
+escf_neg, C_neg = scf.solve_scf(e_conv, r_conv, maxiter)
+
+mu_e = -(escf_pos - escf_neg)/(2 * A)
+mu_n = mol.nuclear_dipole()
+
+print("ESCF(0)     = %20.12f" % (escf))
+print("ESCF(+A)    = %20.12f" % (escf_pos))
+print("ESCF(-A)    = %20.12f" % (escf_neg))
+print("Mu_e(z)     = %20.12f" % (mu_e))
+print("Mu_n(z)     = %20.12f" % (mu_n[2]))
+print("Mu_tot(z)   = %20.12f" % (mu_e+mu_n[2]))
+
+rhf_e, rhf_wfn = psi4.energy('SCF', return_wfn=True)
+
+print("Mu_tot(z)   = %20.12f (Psi4)" % (psi4.variable('SCF DIPOLE')[2]))
+
