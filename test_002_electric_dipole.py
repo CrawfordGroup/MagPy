@@ -27,12 +27,12 @@ escf, C = scf.solve_scf(e_conv, r_conv, maxiter)
 
 # Add a field to the Hamiltonian and re-compute the wfn
 A = 0.00001
-H.add_field(field='electric-dipole', field_axis='z', strength=A)
+H.add_field(field='electric-dipole', axis='z', strength=A)
 escf_pos, C_pos = scf.solve_scf(e_conv, r_conv, maxiter)
 
 # Reset potential to zero field, add new field, and re-compute
 H.reset_V()
-H.add_field(field='electric-dipole', field_axis='z', strength=-A)
+H.add_field(field='electric-dipole', axis='z', strength=-A)
 escf_neg, C_neg = scf.solve_scf(e_conv, r_conv, maxiter)
 
 # Compute electronic contribution to the dipole moment via finite differences: mu_e(alpha) = - dE/dF_alpha
