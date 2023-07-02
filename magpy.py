@@ -30,6 +30,6 @@ escf, C = scf.solve_scf(e_conv, r_conv, maxiter)
 
 ### Test Magnetic Field
 H.reset_V()
-A = -0.01
-H.add_field(field='magnetic-dipole', field_axis='z', strength=A)
+A = 0.02
+H.add_field(field='magnetic-dipole', axis='z', strength=A)
 escf_mag_pos, C_mag_pos = scf.solve_scf(e_conv, r_conv, maxiter, max_diis=8)
