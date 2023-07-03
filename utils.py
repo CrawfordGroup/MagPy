@@ -1,5 +1,6 @@
 import numpy as np
 from opt_einsum import contract
+import math
 
 class helper_diis(object):
     def __init__(self, F, max_diis):
@@ -47,3 +48,8 @@ class helper_diis(object):
             F = F + c[i] * self.diis_F[i+1]
 
         return F
+
+#def distance(v, u):
+#    """Compute the distance between points defined by vectors *v* and *u*."""
+#    return math.sqrt(sum(((v[i] - u[i]) * (v[i] - u[i]) for i in range(v.size))))
+#
