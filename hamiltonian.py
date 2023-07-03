@@ -53,21 +53,6 @@ class Hamiltonian(object):
         for i in range(len(self.Q)):
             self.Q[i] = np.asarray(self.Q[i])
 
-#    def nuclear_repulsion_energy(self, field_strength=[0.0,0.0,0.0]):
-#
-#        print(field_strength)
-#
-#        e = 0.0
-#        for at1 in range(self.molecule.natom()):
-#            for at2 in range(self.molecule.natom()):
-#                if at2 < at1:
-#                    Zi = self.molecule.Z(at1)
-#                    Zj = self.molecule.Z(at2)
-#                    xyz1 = self.molecule.xyz(at1)
-#                    xyz2 = self.molecule.xyz(at2)
-#                    dist = xyz1.distance(xyz2)
-#                    e += Zi * Zj / dist
-#        return e 
 
     def add_field(self, **kwargs):
 
@@ -103,10 +88,8 @@ class Hamiltonian(object):
         print(f"  Field strength: {self.field_strength}")
 
         # Add the external field to the one-electron potential
-#        np.set_printoptions(precision=14)
-#        np.set_printoptions(suppress=True)
         for i in range(3):
-            self.V = self.V - self.field_strength[i] * field[i]
+            self.V = self.V + self.field_strength[i] * field[i]
 
         # Get the new nuclear repulsion energy including the field
         if self.field_type == 'ELECTRIC-DIPOLE':
