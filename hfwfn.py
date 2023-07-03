@@ -17,9 +17,6 @@ class hfwfn(object):
             raise Exception("MagPy is for closed-shell systems only at present.")
         self.ndocc = nelec//2;
 
-        # Determine nuclear repulsion energy 
-        self.enuc = H.molecule.nuclear_repulsion_energy()
-
         # Determine number of orbitals
         self.nao = H.basisset.nao()
 
@@ -33,6 +30,9 @@ class hfwfn(object):
     def solve_scf(self, e_conv=1e-7, r_conv=1e-7, maxiter=100, max_diis=8, start_diis=1):
         # Electronic Hamiltonian, including fields
         H = self.H
+
+        # Get the nuclear repulsion energy 
+        self.enuc = H.enuc
 
         # Core Hamiltonian
         h = H.T + H.V
@@ -54,6 +54,7 @@ class hfwfn(object):
         # Setup DIIS object
         diis = helper_diis(F, max_diis)
 
+        print("\n  Nuclear repulsion energy = %20.12f" % self.enuc)
         print("\n Iter     E(elec,real)         E(elec,imag)            E(tot)               Delta(E)             RMS(D)")
         print(" %02d %20.12f %20.12f %20.12f" % (0, escf.real, escf.imag, escf.real + self.enuc))
 
