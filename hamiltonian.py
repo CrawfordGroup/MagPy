@@ -28,6 +28,9 @@ class Hamiltonian(object):
         # user adds external fields later
         self.V0 = self.V 
 
+		# Nuclear repulsion energy (zero field)
+        self.enuc = self.molecule.nuclear_repulsion_energy()
+
         ## One-electron property integrals for adding multipole fields
 
         # Electric dipole integrals (length): -e r
@@ -49,6 +52,22 @@ class Hamiltonian(object):
         self.Q = mints.ao_traceless_quadrupole()
         for i in range(len(self.Q)):
             self.Q[i] = np.asarray(self.Q[i])
+
+#    def nuclear_repulsion_energy(self, field_strength=[0.0,0.0,0.0]):
+#
+#        print(field_strength)
+#
+#        e = 0.0
+#        for at1 in range(self.molecule.natom()):
+#            for at2 in range(self.molecule.natom()):
+#                if at2 < at1:
+#                    Zi = self.molecule.Z(at1)
+#                    Zj = self.molecule.Z(at2)
+#                    xyz1 = self.molecule.xyz(at1)
+#                    xyz2 = self.molecule.xyz(at2)
+#                    dist = xyz1.distance(xyz2)
+#                    e += Zi * Zj / dist
+#        return e 
 
     def add_field(self, **kwargs):
 
@@ -72,33 +91,28 @@ class Hamiltonian(object):
         else:
             raise Exception("Can't handle custom fields yet.  Stay tuned!")
 
-        valid_axes = ['X', 'Y', 'Z', 'ISOTROPIC']
-        self.field_axis = kwargs.pop('axis').upper()
-        print(self.field_axis)
-        if self.field_axis not in valid_axes:
-            raise Exception("%s is not a valid field axis." % (self.field_axis))
-        axis_index = {'X':0, 'Y':1, 'Z':2} # Translate axis to index
-
         self.field_strength = kwargs.pop('strength')
-        if type(self.field_strength) is not float:
-            raise Exception("Field strength must be of type float.")
+        if type(self.field_strength) is not list:
+            raise Exception("Field strength must be given as a length-3 list of floats.")
+        if len(self.field_strength) != 3:
+            raise Exception("Field strength must be given as a length-3 list of floats.")
+        if type(self.field_strength[0]) is not float or type(self.field_strength[1]) is not float or type(self.field_strength[2]) is not float:
+            raise Exception("Field strength must be given as a length-3 list of floats.")
 
-        print(f"Field axis: {self.field_axis}")
-        print(f"Field strength: {self.field_strength}")
+        print(f"\n  Field type:     {self.field_type}")
+        print(f"  Field strength: {self.field_strength}")
 
         # Add the external field to the one-electron potential
 #        np.set_printoptions(precision=14)
 #        np.set_printoptions(suppress=True)
-        if self.field_axis != 'ISOTROPIC':
-            self.V = self.V - self.field_strength * field[axis_index[self.field_axis]]
-            print(self.V)
-        else:
-            self.V = self.V - self.field_strength * sum(field)/np.sqrt(3.0)
+        for i in range(3):
+            self.V = self.V - self.field_strength[i] * field[i]
 
-        # Get the new nuclear repulsion energy with the field on
+        # Get the new nuclear repulsion energy including the field
         if self.field_type == 'ELECTRIC-DIPOLE':
-            self.molecule.
+            self.enuc = self.molecule.nuclear_repulsion_energy(self.field_strength)
 
     def reset_V(self):
 
         self.V = self.V0
+
