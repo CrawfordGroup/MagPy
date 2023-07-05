@@ -89,11 +89,14 @@ class Hamiltonian(object):
 
         # Add the external field to the one-electron potential
         for i in range(3):
-            self.V = self.V + self.field_strength[i] * field[i]
+            self.V = self.V - self.field_strength[i] * field[i]
 
         # Get the new nuclear repulsion energy including the field
+        # NB: The libmints Molecule class *adds* the field*nuclear_dipoles to
+        # the energy, so we have to multiply the field_strength by -1 for
+        # consistency.
         if self.field_type == 'ELECTRIC-DIPOLE':
-            self.enuc = self.molecule.nuclear_repulsion_energy(self.field_strength)
+            self.enuc = self.molecule.nuclear_repulsion_energy([-1.0 * x for x in self.field_strength])
 
     def reset_V(self):
 
