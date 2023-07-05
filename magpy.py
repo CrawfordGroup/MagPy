@@ -16,7 +16,7 @@ psi4.set_options({'basis': 'STO-3G',
 mol = psi4.geometry(moldict["H2O"])
 rhf_e, rhf_wfn = psi4.energy('SCF', return_wfn=True)
 
-print(f"SCF Energy from Psi4: {rhf_e}")
+print(f"  SCF Energy from Psi4: {rhf_e}")
 
 mol.print_out_in_bohr()
 
@@ -30,6 +30,6 @@ escf, C = scf.solve_scf(e_conv, r_conv, maxiter)
 
 ### Test Magnetic Field
 H.reset_V()
-A = 0.02
-H.add_field(field='magnetic-dipole', axis='z', strength=A)
+A = [0.0, 0.0, 0.02]
+H.add_field(field='magnetic-dipole', strength=A)
 escf_mag_pos, C_mag_pos = scf.solve_scf(e_conv, r_conv, maxiter, max_diis=8)
