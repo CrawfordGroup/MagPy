@@ -1,8 +1,59 @@
 import numpy as np
+from itertools import permutations
 from opt_einsum import contract
-import math
+
+def perm_parity(a):
+    parity = 1
+    for i in range(0,len(a)-1):
+        if a[i] != i:
+            parity *= -1
+            j = min(range(i,len(a)), key=a.__getitem__)
+            a[i],a[j] = a[j],a[i]
+
+    return parity
+
 
 def match_phase(bra, bra_basis, ket, ket_basis):
+    # Get AO-basis overlap integrals
+    mints = psi4.core.MintsHelper(bra_basis)
+    if bra_basis = ket_basis:
+        S_ao = mints.ao_overlap().np
+    else:
+        S_ao = mints.ao_overlap(bra_basis, ket_basis).np
+
+    # Transform to MO basis
+    S = bra.T @ S_ao @ ket
+
+    # Compute normalization constant and phase, and correct phase of ket
+    new_ket = ket.copy()
+    for p in range(nmo):
+        N = np.sqrt(S[p][p] * np.conj(S[p][p]))
+        phase = S[p][p]/N
+        new_ket[:, p] *= phase**(-1)
+
+    return new_ket
+
+
+def det_overlap(bra, bra_basis, ket, ket_basis):
+    # Get AO-basis overlap integrals
+    mints = psi4.core.MintsHelper(bra_basis)
+    if bra_basis = ket_basis:
+        S_ao = mints.ao_overlap().np
+    else:
+        S_ao = mints.ao_overlap(bra_basis, ket_basis).np
+
+    # Transform to MO basis
+    S = bra.T @ S_ao @ ket
+
+    # Compute overlap
+    overlap = 0.0
+    for perm in permutations(range(ndocc)):
+        product = 1.0
+        for p in range(ndocc):
+            product *= S[p][perm[p]] 
+        overlap += product*parity(perm)
+
+    return overlap
 
 
 class helper_diis(object):
@@ -39,8 +90,6 @@ class helper_diis(object):
                 B[n1, n2] = contract('pq,pq->', e1.conjugate(), e2)
                 B[n2, n1] = B[n1, n2]
 
-
-#        B[:-1, :-1] /= np.abs(B[:-1, :-1]).max()
         A = np.zeros((self.diis_size+1), dtype=type(F[0,0]))
         A[-1] = -1
 
@@ -52,7 +101,3 @@ class helper_diis(object):
 
         return F
 
-#def distance(v, u):
-#    """Compute the distance between points defined by vectors *v* and *u*."""
-#    return math.sqrt(sum(((v[i] - u[i]) * (v[i] - u[i]) for i in range(v.size))))
-#

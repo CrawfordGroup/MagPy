@@ -13,7 +13,7 @@ class AAT_HF(object):
         # Prepare unperturbed Hamiltonian
         self.H = Hamiltonian(molecule)
 
-    def compute(self, r_disp, b_disp, e_conv=1e-12, r_conv=1e-12, maxiter=100, max_diis=8, start_diis=1):
+    def compute(self, R_disp, B_disp, e_conv=1e-12, r_conv=1e-12, maxiter=100, max_diis=8, start_diis=1):
 
         H = self.H
 
@@ -27,15 +27,16 @@ class AAT_HF(object):
 
             # +B displacement
             H.reset_V()
-            H.add_field(field='magnetic-dipole', strength=b_disp)
+            H.add_field(field='magnetic-dipole', strength=B_disp)
             escf_B_pos, C_B_pos = scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
             match_phase(C0, basis0, C_B_pos, basis0)
 
             # -B displacement
             H.reset_V()
-            H.add_field(field='magnetic-dipole', strength=-b_disp)
+            H.add_field(field='magnetic-dipole', strength=-B_disp)
             escf_B_neg, C_B_neg = scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
             match_phase(C0, basis0, C_B_neg, basis0)
 
             # Loop over atomic coordinate displacements
-#            for R in range(3*self.molecule.natom()):
+            geom = self.moleculae.geometry().np
+            for R in range(3*self.molecule.natom()):
