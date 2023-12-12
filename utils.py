@@ -2,6 +2,9 @@ import numpy as np
 from opt_einsum import contract
 import math
 
+def match_phase(bra, bra_basis, ket, ket_basis):
+
+
 class helper_diis(object):
     def __init__(self, F, max_diis):
         self.diis_F = [F.copy()] # List of Fock matrices

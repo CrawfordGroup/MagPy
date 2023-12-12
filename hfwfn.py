@@ -93,4 +93,3 @@ class hfwfn(object):
         raise Exception("SCF iterations failed to converge in %d cycles." % (maxiter))
 
 #    def fix_phase(self, C):
-

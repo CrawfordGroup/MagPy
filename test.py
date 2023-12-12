@@ -2,7 +2,9 @@ import psi4
 import sys
 sys.path.append('/Users/crawdad/src/pycc/pycc/data')
 from molecules import *
-from aat_hf import AAT_HF
+from hamiltonian import Hamiltonian
+from hfwfn import hfwfn
+import numpy as np
 
 psi4.set_memory('2 GB')
 psi4.set_output_file('output.dat', False)
@@ -16,8 +18,23 @@ rhf_e, rhf_wfn = psi4.energy('SCF', return_wfn=True)
 
 print(f"  SCF Energy from Psi4: {rhf_e}")
 
-AAT = AAT_HF(mol)
+charge = 0
+spin = 1
+AAT = AAT_HF(molecule, 
 
-r_disp = 0.001
-b_disp = 0.001
-I = AAT.compute(r_disp, b_disp)
+
+mol.print_out_in_bohr()
+
+H = Hamiltonian(mol)
+
+scf = hfwfn(H)
+e_conv = 1e-13
+r_conv = 1e-13
+maxiter = 100
+escf, C = scf.solve_scf(e_conv, r_conv, maxiter)
+
+### Test Magnetic Field
+H.reset_V()
+A = [0.0, 0.0, 0.02]
+H.add_field(field='magnetic-dipole', strength=A)
+escf_mag_pos, C_mag_pos = scf.solve_scf(e_conv, r_conv, maxiter, max_diis=8)
