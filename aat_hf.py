@@ -15,50 +15,46 @@ class AAT_HF(object):
 
     def compute(self, R_disp, B_disp, e_conv=1e-12, r_conv=1e-12, maxiter=100, max_diis=8, start_diis=1):
 
-        # Prepare unperturbed Hamiltonian -- used for unperturbed and mag-field perturbations
+        # Unperturbed Hamiltonian
         H = Hamiltonian(self.molecule)
 
-        # Compute the unperturbed HF wfn for reference -- also used for mag-field perturbations
+        # Compute the unperturbed HF wfn
         scf0 = hfwfn(H, self.charge, self.spin)
         escf0, C0 = scf0.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
-        basis0 = psi4.core.BasisSet.build(self.molecule)
-
-        # Hang on to the original geometry as NumPy array
-        self.geom0 = self.molecule.geometry().np
 
         # Loop over magnetic field displacements
         for B in range(3):
+            strength = [0,0,0]
 
             # +B displacement
             H.reset_V()
             H.add_field(field='magnetic-dipole', strength=B_disp)
             escf_B_pos, C_B_pos = scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
-            match_phase(C0, basis0, C_B_pos, basis0)
+            match_phase(C0, H.basisset, C_B_pos, H.basisset)
 
             # -B displacement
             H.reset_V()
             H.add_field(field='magnetic-dipole', strength=-B_disp)
             escf_B_neg, C_B_neg = scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
-            match_phase(C0, basis0, C_B_neg, basis0)
+            match_phase(C0, H.basisset, C_B_neg, H.basisset)
 
             # Loop over atomic coordinate displacements
             for R in range(3*self.molecule.natom()):
 
                 # Clone of input molecule for this perturbation
-                molecule = self.molecule.clone()
+                mol_pos = self.molecule.clone()
 
                 # Grab the original geometry and shift the current coordinate
-                geom = np.copy(this_molecule.geometry().np)
+                geom = np.copy(mol_pos.geometry().np)
                 geom[R//3][R%3] += R_disp
                 geom = psi4.core.Matrix.from_array(geom) # Convert to Psi4 Matrix
-                this_molecule.set_geometry(geom)
-                this_molecule.fix_orientation(True)
-                this_molecule.fix_com(True)
-                this_molecule.update_geometry()
-                this_basis = psi4.core.BasisSet.build(this_molecule)
+                mol_pos.set_geometry(geom)
+                mol_pos.fix_orientation(True)
+                mol_pos.fix_com(True)
+                mol_pos.update_geometry()
 
-                this_H = Hamiltonian(self.molecule)
+                H_pos = Hamiltonian(mol_pos)
                 
-                scf_R_pos = hfwfn(this_H, self.charge, self.spin)
+                scf_R_pos = hfwfn(H_pos, self.charge, self.spin)
                 escf_R_pos, C_R_pos = scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
-                match_phase(C0, basis0, C_R_pos, this_basis)
+                match_phase(C0, basis0, C_R_pos, H_pos.basisset)

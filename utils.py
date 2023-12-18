@@ -107,9 +107,10 @@ def det_overlap(bra, bra_basis, ket, ket_basis):
     overlap = 0.0
     for perm in permutations(range(N)):
         product = 1.0
+        l = list(perm)
         for p in range(N):
-            product *= S[p][perm[p]] 
-        overlap += product*parity(perm)
+            product *= S[p][l[p]] 
+        overlap += product*parity(l)
 
     return overlap
 
