@@ -1,12 +1,10 @@
 """
-Unit and regression test for the magpy package.
+Import test for the magpy package.
 """
 
 # Import package, test suite, and other packages as needed
 import sys
-
 import pytest
-
 import magpy
 
 
