@@ -27,7 +27,11 @@ class hfwfn(object):
 
         return nelec
 
-    def solve_scf(self, e_conv=1e-7, r_conv=1e-7, maxiter=100, max_diis=8, start_diis=1):
+    def solve_scf(self, e_conv=1e-7, r_conv=1e-7, maxiter=100, max_diis=8, start_diis=1, **kwargs):
+
+        # Suppress printing SCF output by default
+        print_level = kwargs.pop('print', 0)
+
         # Electronic Hamiltonian, including fields
         H = self.H
 
@@ -54,9 +58,10 @@ class hfwfn(object):
         # Setup DIIS object
         diis = helper_diis(F, max_diis)
 
-        print("\n  Nuclear repulsion energy = %20.12f" % self.enuc)
-        print("\n Iter     E(elec,real)         E(elec,imag)            E(tot)               Delta(E)             RMS(D)")
-        print(" %02d %20.12f %20.12f %20.12f" % (0, escf.real, escf.imag, escf.real + self.enuc))
+        if print_level > 0:
+            print("\n  Nuclear repulsion energy = %20.12f" % self.enuc)
+            print("\n Iter     E(elec,real)         E(elec,imag)            E(tot)               Delta(E)             RMS(D)")
+            print(" %02d %20.12f %20.12f %20.12f" % (0, escf.real, escf.imag, escf.real + self.enuc))
 
         # SCF iteration
         for niter in range(1, maxiter+1):
@@ -83,13 +88,11 @@ class hfwfn(object):
             ediff = (escf - escf_last).real
             rms = np.linalg.norm(D-D_last).real
 
-            print(" %02d %20.12f %20.12f %20.12f %20.12f %20.12f" % (niter, escf.real, escf.imag, escf.real + self.enuc, ediff, rms))
-
             # Check for convergence
             if ((abs(ediff) < e_conv) and (abs(rms) < r_conv)):
+                if print_level > 0:
+                    print(" %02d %20.12f %20.12f %20.12f %20.12f %20.12f" % (niter, escf.real, escf.imag, escf.real + self.enuc, ediff, rms))
                 return (escf+self.enuc), C
 
         # Convergence failure
         raise Exception("SCF iterations failed to converge in %d cycles." % (maxiter))
-
-#    def fix_phase(self, C):

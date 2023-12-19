@@ -1,3 +1,4 @@
+import psi4
 import numpy as np
 from itertools import permutations
 from opt_einsum import contract
@@ -40,9 +41,14 @@ def mo_overlap(bra, bra_basis, ket, ket_basis):
     -------
     S: MO-basis overlap matrix (NumPy array)
     """
+    # Sanity check
+    if (bra.shape[0] != ket.shape[0]) or (bra.shape[1] != ket.shape[1]):
+        raise Exception("Bra and Ket States do not have the same dimensions: (%d,%d) vs. (%d,%d)." % 
+                (bra.shape[0], bra.shape[1], ket.shape[0], ket.shape[1]))
+
     # Get AO-basis overlap integrals
     mints = psi4.core.MintsHelper(bra_basis)
-    if bra_basis = ket_basis:
+    if bra_basis == ket_basis:
         S_ao = mints.ao_overlap().np
     else:
         S_ao = mints.ao_overlap(bra_basis, ket_basis).np
@@ -72,7 +78,7 @@ def match_phase(bra, bra_basis, ket, ket_basis):
 
     # Compute normalization constant and phase, and correct phase of ket
     new_ket = ket.copy()
-    for p in range(nmo):
+    for p in range(ket.shape[1]):
         N = np.sqrt(S[p][p] * np.conj(S[p][p]))
         phase = S[p][p]/N
         new_ket[:, p] *= phase**(-1)
@@ -98,7 +104,7 @@ def det_overlap(bra, bra_basis, ket, ket_basis):
     overlap: scalar
     """
     # Sanity check
-    if (bra.shape[0] != ket.shape[0]) or (bra.shape[1] != ket.shape[0]):
+    if (bra.shape[0] != ket.shape[0]) or (bra.shape[1] != ket.shape[1]):
         raise Exception("Bra and Ket States do not have the same dimensions: (%d,%d) vs. (%d,%d)." % (bra.shape[0], bra.shape[1], ket.shape[0], ket.shape[1]))
 
     N = bra.shape[1] # Number of MOs in the determinants
@@ -133,7 +139,7 @@ def det_overlap2(bra, bra_basis, ket, ket_basis):
     overlap: scalar
     """
     # Sanity check
-    if (bra.shape[0] != ket.shape[0]) or (bra.shape[1] != ket.shape[0]):
+    if (bra.shape[0] != ket.shape[0]) or (bra.shape[1] != ket.shape[1]):
         raise Exception("Bra and Ket States do not have the same dimensions: (%d,%d) vs. (%d,%d)." % (bra.shape[0], bra.shape[1], ket.shape[0], ket.shape[1]))
 
     return np.linalg.det(mo_overlap(bra, bra_basis, ket, ket_basis))
