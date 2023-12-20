@@ -6,8 +6,8 @@ import psi4
 import magpy
 import pytest
 from ..data.molecules import *
-from hamiltonian import Hamiltonian
-from hfwfn import hfwfn
+#from .hamiltonian import Hamiltonian
+#from .hfwfn import hfwfn
 import numpy as np
 
 # Test on HF molecule
@@ -32,8 +32,8 @@ def test_ccsd_hf():
     mol = psi4.geometry(hf)
 
     # Get MagPy energies and dipole moment
-    H = Hamiltonian(mol)
-    scf = hfwfn(H)
+    H = magpy.Hamiltonian(mol)
+    scf = magpy.hfwfn(H)
     e_conv = 1e-13
     r_conv = 1e-13
     maxiter = 100

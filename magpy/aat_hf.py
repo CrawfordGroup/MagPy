@@ -1,8 +1,11 @@
+if __name__ == "__main__":
+    raise Exception("This file cannot be invoked on its own.")
+
 import psi4
-from hamiltonian import Hamiltonian
-from hfwfn import hfwfn
+import magpy
 import numpy as np
-from utils import *
+from .utils import *
+
 
 class AAT_HF(object):
 
@@ -38,10 +41,10 @@ class AAT_HF(object):
     def compute(self, R_disp, B_disp, e_conv=1e-13, r_conv=1e-13, maxiter=400, max_diis=8, start_diis=1, print_level=0):
 
         # Unperturbed Hamiltonian
-        H = Hamiltonian(self.molecule)
+        H = magpy.Hamiltonian(self.molecule)
 
         # Compute the unperturbed HF wfn
-        scf0 = hfwfn(H, self.charge, self.spin)
+        scf0 = magpy.hfwfn(H, self.charge, self.spin)
         escf0, C0 = scf0.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis, print=print_level)
 
         # Occupied MO slice
@@ -72,14 +75,14 @@ class AAT_HF(object):
             for R in range(3*self.molecule.natom()):
 
                 # +R displacement
-                H_pos = Hamiltonian(self.shift_geom(R, R_disp))
-                scf_R_pos = hfwfn(H_pos, self.charge, self.spin)
+                H_pos = magpy.Hamiltonian(self.shift_geom(R, R_disp))
+                scf_R_pos = magpy.hfwfn(H_pos, self.charge, self.spin)
                 escf_R_pos, C_R_pos = scf_R_pos.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis, print=print_level)
                 C_R_pos = match_phase(C0, H.basisset, C_R_pos, H_pos.basisset)
 
                 # -R displacement
-                H_neg = Hamiltonian(self.shift_geom(R, -R_disp))
-                scf_R_neg = hfwfn(H_neg, self.charge, self.spin)
+                H_neg = magpy.Hamiltonian(self.shift_geom(R, -R_disp))
+                scf_R_neg = magpy.hfwfn(H_neg, self.charge, self.spin)
                 escf_R_neg, C_R_neg = scf_R_neg.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis, print=print_level)
                 C_R_neg = match_phase(C0, H.basisset, C_R_neg, H_neg.basisset)
 

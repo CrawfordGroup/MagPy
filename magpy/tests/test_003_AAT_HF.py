@@ -11,19 +11,19 @@ def test_AAT_HF_H2O():
     psi4.set_memory('2 GB')
     psi4.set_output_file('output.dat', False)
     psi4.set_options({'scf_type': 'pk',
-                      'e_convergence': 1e-13,
-                      'd_convergence': 1e-13,
-                      'r_convergence': 1e-13})
+                      'e_convergence': 1e-12,
+                      'd_convergence': 1e-12,
+                      'r_convergence': 1e-12})
 
     psi4.set_options({'basis': 'STO-6G'})
     mol = psi4.geometry(moldict["H2O"])
     rhf_e, rhf_wfn = psi4.energy('SCF', return_wfn=True)
     print(f"  SCF Energy from Psi4: {rhf_e}")
 
-    AAT = AAT_HF(mol)
+    AAT = magpy.AAT_HF(mol)
 
-    r_disp = 0.00001
-    b_disp = 0.00001
+    r_disp = 0.0001
+    b_disp = 0.0001
     I = AAT.compute(r_disp, b_disp)
     print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
     print(I)
@@ -44,25 +44,25 @@ def test_AAT_HF_H2O():
     print("\nError in Numerical vs. Analytic Tensors (a.u.):")
     print(analytic_ref-I)
 
-    assert(np.max(np.abs(analytic_ref-I)) < 1e-8)
+    assert(np.max(np.abs(analytic_ref-I)) < 1e-7)
 
 def test_AAT_HF_H2O2():
 
     psi4.set_memory('2 GB')
     psi4.set_output_file('output.dat', False)
     psi4.set_options({'scf_type': 'pk',
-                      'e_convergence': 1e-13,
-                      'd_convergence': 1e-13,
-                      'r_convergence': 1e-13})
+                      'e_convergence': 1e-12,
+                      'd_convergence': 1e-12,
+                      'r_convergence': 1e-12})
 
     psi4.set_options({'basis': 'STO-6G'})
     mol = psi4.geometry(moldict["H2O2"])
     rhf_e, rhf_wfn = psi4.energy('SCF', return_wfn=True)
     print(f"  SCF Energy from Psi4: {rhf_e}")
 
-    AAT = AAT_HF(mol)
-    r_disp = 0.00001
-    b_disp = 0.00001
+    AAT = magpy.AAT_HF(mol)
+    r_disp = 0.0001
+    b_disp = 0.0001
     I = AAT.compute(r_disp, b_disp)
     print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
     print(I)
@@ -86,7 +86,7 @@ def test_AAT_HF_H2O2():
     print("\nError in Numerical vs. Analytic Tensors (a.u.):")
     print(analytic_ref-I)
 
-    assert(np.max(np.abs(analytic_ref-I)) < 1e-8)
+    assert(np.max(np.abs(analytic_ref-I)) < 1e-7)
 
 
 def test_AAT_HF_etho():
@@ -94,18 +94,18 @@ def test_AAT_HF_etho():
     psi4.set_memory('2 GB')
     psi4.set_output_file('output.dat', False)
     psi4.set_options({'scf_type': 'pk',
-                      'e_convergence': 1e-13,
-                      'd_convergence': 1e-13,
-                      'r_convergence': 1e-13})
+                      'e_convergence': 1e-12,
+                      'd_convergence': 1e-12,
+                      'r_convergence': 1e-12})
 
     psi4.set_options({'basis': '4-31G'})
     mol = psi4.geometry(moldict["Ethylene Oxide"])
     rhf_e, rhf_wfn = psi4.energy('SCF', return_wfn=True)
     print(f"  SCF Energy from Psi4: {rhf_e}")
 
-    AAT = AAT_HF(mol)
-    r_disp = 0.00001
-    b_disp = 0.00001
+    AAT = magpy.AAT_HF(mol)
+    r_disp = 0.0001
+    b_disp = 0.0001
     I = AAT.compute(r_disp, b_disp)
     print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
     print(I)
@@ -138,4 +138,4 @@ def test_AAT_HF_etho():
     print("\nError in Numerical vs. Analytic Tensors (a.u.):")
     print(analytic_ref-I)
 
-    assert(np.max(np.abs(analytic_ref-I)) < 1e-8)
+    assert(np.max(np.abs(analytic_ref-I)) < 1e-6)

@@ -1,8 +1,11 @@
+if __name__ == "__main__":
+    raise Exception("This file cannot be invoked on its own.")
+
 import numpy as np
 from opt_einsum import contract
 import math
 import scipy.linalg
-from utils import helper_diis
+from .utils import helper_diis
 
 class hfwfn(object):
 
