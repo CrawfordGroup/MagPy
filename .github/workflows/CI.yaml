@@ -1,8 +1,6 @@
 name: CI
 
 on:
-  # GitHub has started calling new repo's first branch "main" https://github.com/github/renaming
-  # The cookiecutter uses the "--initial-branch" flag when it runs git-init
   push:
     branches:
       - "main"
@@ -10,54 +8,76 @@ on:
     branches:
       - "main"
   schedule:
-    # Weekly tests run on main by default:
-    #   Scheduled workflows run on the latest commit on the default or base branch.
-    #   (from https://help.github.com/en/actions/reference/events-that-trigger-workflows#scheduled-events-schedule)
-    - cron: "0 0 * * 0"
+    - cron: "0 0 * * *"
 
 jobs:
   test:
-    name: Test on ${{ matrix.os }}, Python ${{ matrix.python-version }}
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    name: MagPy Test ${{ matrix.os }}, Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: true
       matrix:
-        os: [macOS-latest, ubuntu-latest, windows-latest]
-        python-version: [3.8, 3.9, "3.10"]
+        os: [macOS-latest, ubuntu-latest]
+        python-version: ['3.8', '3.9', '3.10']
 
     steps:
-      - uses: actions/checkout@v3
+    - uses: actions/checkout@v2
 
-      - name: Additional info about the build
-        shell: bash
-        run: |
-          uname -a
-          df -h
-          ulimit -a
+    - name: Additional info about the build
+      shell: bash
+      run: |
+        uname -a
+        df -h
+        ulimit -a
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
+    - name: Create Psi4 Environment
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        activate-environment: p4dev
+        environment-file: devtools/conda-envs/psi.yaml
+        python-version: ${{ matrix.python-version }}
+        auto-activate-base: true
 
-      - name: Testing Dependencies
-        shell: bash
-        run: |
-          python -m pip install -U pytest pytest-cov codecov
+    - name: Environment Information
+      run: |
+        conda info
+        conda list --show-channel-urls
+        hash -r
+        env
 
-      - name: Install package
-        shell: bash
-        run: |
-          python -m pip install .
+    - name: Install Psi4
+      run: |
+        conda info
+        conda list --show-channel-urls
+        conda install psi4 python=${{ matrix.python-version }} -c psi4/label/dev
+        ls -l $CONDA
 
-      - name: Run tests
-        shell: bash
+    - name: Test Psi4 Python Loading
+      run: |
+        export PATH=$CONDA_PREFIX/bin:$PATH
+        export PYTHONPATH=$CONDA_PREFIX/lib:$PYTHONPATH
+        python -c 'import psi4'
 
-        run: |
-          pytest -v --cov=magpy --cov-report=xml --color=yes magpy/tests/
+    - name: Install MagPy and Deps
+      run: |
+        env
+        export PATH=$CONDA_PREFIX/bin:$PATH
+        export PYTHONPATH=$CONDA_PREFIX/lib:$PYTHONPATH
+        python -m pip install .
+        python -m pip install opt_einsum
+        conda list
 
-      - name: CodeCov
-        uses: codecov/codecov-action@v1
-        with:
-          file: ./coverage.xml
-          flags: unittests
-          name: codecov-${{ matrix.os }}-py${{ matrix.python-version }}
+    - name: PyTest
+      run: |
+        pytest -v --cov=magpy --cov-report=xml --color=yes magpy/tests/
+
+    - name: CodeCov
+      uses: codecov/codecov-action@v1
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-pycc
