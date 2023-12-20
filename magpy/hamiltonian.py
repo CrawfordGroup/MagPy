@@ -56,6 +56,9 @@ class Hamiltonian(object):
 
     def add_field(self, **kwargs):
 
+        # Suppress printing by default
+        print_level = kwargs.pop('print', 0)
+
         # Add predefined field or user-defined field
         # Predefined = multipole-type = - strength * mulipole integrals
         # User-defined = any function * one-electron integral field
@@ -77,15 +80,16 @@ class Hamiltonian(object):
             raise Exception("Can't handle custom fields yet.  Stay tuned!")
 
         self.field_strength = kwargs.pop('strength')
-        if type(self.field_strength) is not list:
-            raise Exception("Field strength must be given as a length-3 list of floats.")
-        if len(self.field_strength) != 3:
-            raise Exception("Field strength must be given as a length-3 list of floats.")
-        if type(self.field_strength[0]) is not float or type(self.field_strength[1]) is not float or type(self.field_strength[2]) is not float:
-            raise Exception("Field strength must be given as a length-3 list of floats.")
+        if not isinstance(self.field_strength, np.ndarray):
+            raise Exception("Field strength must be given as a length-3 NumPy array of type float64.")
+        if self.field_strength.size != 3:
+            raise Exception("Field strength must be given as a length-3 NumPy array of type float64.")
+        if self.field_strength.dtype != 'float64':
+            raise Exception("Field strength must be given as a length-3 NumPy array of type float64.")
 
-        print(f"\n  Field type:     {self.field_type}")
-        print(f"  Field strength: {self.field_strength}")
+        if print_level > 0:
+            print(f"\n  Field type:     {self.field_type}")
+            print(f"  Field strength: {self.field_strength}")
 
         # Add the external field to the one-electron potential
         for i in range(3):
