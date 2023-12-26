@@ -60,7 +60,7 @@ jobs:
       run: |
         export PATH=$CONDA_PREFIX/bin:$PATH
         export PYTHONPATH=$CONDA_PREFIX/lib:$PYTHONPATH
-        python -c -v 'import psi4'
+        python -c 'import psi4'
 
     - name: Install MagPy and Deps
       run: |
