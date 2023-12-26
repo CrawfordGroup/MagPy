@@ -8,4 +8,4 @@ from .hfwfn import hfwfn
 from .aat_hf import AAT_HF
 
 
-from ._version import __version__
+#from ._version import __version__
