@@ -54,3 +54,4 @@ jobs:
         export PYTHONPATH=$CONDA_PREFIX/lib:$PYTHONPATH
         conda init
         conda env list
+        source .bashrc
