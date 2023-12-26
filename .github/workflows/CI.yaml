@@ -53,6 +53,6 @@ jobs:
         export PATH=$CONDA_PREFIX/bin:$PATH
         export PYTHONPATH=$CONDA_PREFIX/lib:$PYTHONPATH
         conda init
-        bash -l
+        sourvce .bashrc
         conda activate p4env
         python -c 'import psi4'
