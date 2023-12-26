@@ -58,3 +58,4 @@ jobs:
         ls -al
         env
         source $HOME/.bashrc
+        which conda
