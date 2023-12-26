@@ -99,7 +99,7 @@ def test_AAT_HF_etho():
                       'd_convergence': 1e-12,
                       'r_convergence': 1e-12})
 
-    os.environ["PSIPATH"] = "magpy/magpy/tests:$PSIPATH"
+    os.environ["PSIPATH"] = "magpy/tests:$PSIPATH"
     psi4.set_options({'basis': '4-31G'})
     mol = psi4.geometry(moldict["Ethylene Oxide"])
     rhf_e, rhf_wfn = psi4.energy('SCF', return_wfn=True)
