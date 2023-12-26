@@ -55,6 +55,9 @@ jobs:
       run: |
         export PATH=$CONDA_PREFIX/bin:$PATH
         export PYTHONPATH=$CONDA_PREFIX/lib:$PYTHONPATH
-        conda init
         conda env list
         python -c "import psi4"
+
+    - name: Install MagPy and Deps
+      run: |
+        python -m pip install .
