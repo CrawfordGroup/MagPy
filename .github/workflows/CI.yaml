@@ -40,7 +40,7 @@ jobs:
         activate-environment: p4env
         environment-file: devtools/conda-envs/psi.yaml
         python-version: ${{ matrix.python-version }}
-        auto-activate-base: false
+        auto-activate-base: true
 
     - name: Install Psi4
       run: |
