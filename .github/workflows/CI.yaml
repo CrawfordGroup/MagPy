@@ -56,3 +56,4 @@ jobs:
         conda env list
         pwd
         ls -al
+        source /home/runner/.bashrc
