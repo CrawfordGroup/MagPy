@@ -52,4 +52,5 @@ jobs:
       run: |
         export PATH=$CONDA_PREFIX/bin:$PATH
         export PYTHONPATH=$CONDA_PREFIX/lib:$PYTHONPATH
+        conda activate p4env
         python -c 'import psi4'
