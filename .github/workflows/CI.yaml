@@ -65,4 +65,4 @@ jobs:
 
     - name: Pytest
       run: |
-        which pytest
+        pytest -v --color=yes
