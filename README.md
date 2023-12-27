@@ -2,9 +2,19 @@ MagPy
 ==============================
 [//]: # (Badges)
 [![GitHub Actions Build Status](https://github.com/CrawfordGroup/MagPy/workflows/CI/badge.svg)](https://github.com/CrawfordGroup/magpy/actions?query=workflow%3ACI)
-[![codecov](https://codecov.io/gh/CrawfordGroup/MagPy/branch/main/graph/badge.svg)](https://codecov.io/gh/CrawfordGroup/MagPy/branch/main)
+[![codecov](https://codecov.io/gh/CrawfordGroup/MagPy/graph/badge.svg?token=SN87ODLNBW)](https://codecov.io/gh/CrawfordGroup/MagPy)
 
-A Python reference implementation for including explicit magnetic fields in quantum chemical calculations.
+A Python reference implementation for including explicit magnetic fields in quantum chemical
+calculations. Current capabilities include:
+  - Complex Hartree-Fock
+  - Atomic axial tensors via numerical derivatives of wave functions
+
+This repository is currently under development. To do a developmental install, download this repository and type `pip install -e .` in the repository directory.
+
+This package requires the following:
+  - [psi4](https://psicode.org)
+  - [numpy](https://numpy.org/)
+  - [opt_einsum](https://optimized-einsum.readthedocs.io/en/stable/)
 
 ### Copyright
 
