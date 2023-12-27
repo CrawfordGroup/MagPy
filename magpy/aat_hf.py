@@ -38,7 +38,7 @@ class AAT_HF(object):
         return this_mol
 
 
-    def compute(self, R_disp, B_disp, e_conv=1e-13, r_conv=1e-13, maxiter=400, max_diis=8, start_diis=1, print_level=0):
+    def compute(self, R_disp, B_disp, e_conv=1e-10, r_conv=1e-10, maxiter=400, max_diis=8, start_diis=1, print_level=0):
 
         # Unperturbed Hamiltonian
         H = magpy.Hamiltonian(self.molecule)
