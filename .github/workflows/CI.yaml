@@ -60,8 +60,7 @@ jobs:
 
     - name: Install MagPy and Deps
       run: |
-        python -m pip install .
-        pip install opt_einsum
+        pip install -e .
         pip install pytest
 
     - name: Test and generate coverage report
