@@ -22,6 +22,7 @@ Copyright (c) 2023, T. Daniel Crawford
 
 
 #### Acknowledgements
- 
-Project based on the 
-[Computational Molecular Science Python Cookiecutter](https://github.com/molssi/cookiecutter-cms) version 1.1.
+
+Project structure based on the
+[MolSSI's](https://molssi.org) [Computational Molecular Science Python Cookiecutter](https://github.com/molssi/cookiecutter-cms)
+version 1.1.
