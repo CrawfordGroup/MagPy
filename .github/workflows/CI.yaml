@@ -67,7 +67,7 @@ jobs:
     - name: Test and generate coverage report
       run: |
         pip install coverage
-        coverage run -m pytest -k test_001_magpy.py
+        coverage run -m pytest
         coverage xml 
         ls -l
 
