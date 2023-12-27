@@ -66,7 +66,12 @@ jobs:
 
     - name: Pytest
       run: |
-        pytest -v --color=yes --cov=MagPy --cov-report=xml
+        pytest -v --color=yes
+
+    - name: Generate coverage report
+      run: |
+        pip install coverage
+        coverage run -m unittest
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3
