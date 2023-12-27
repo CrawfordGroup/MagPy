@@ -1,7 +1,7 @@
 MagPy
 ==============================
 [//]: # (Badges)
-[![GitHub Actions Build Status](https://github.com/CrawfordGroup/magpy/workflows/CI/badge.svg)](https://github.com/CrawfordGroup/magpy/actions?query=workflow%3ACI)
+[![GitHub Actions Build Status](https://github.com/CrawfordGroup/MagPy/workflows/CI/badge.svg)](https://github.com/CrawfordGroup/magpy/actions?query=workflow%3ACI)
 [![codecov](https://codecov.io/gh/CrawfordGroup/MagPy/branch/main/graph/badge.svg)](https://codecov.io/gh/CrawfordGroup/MagPy/branch/main)
 
 A Python reference implementation for including explicit magnetic fields in quantum chemical calculations.
