@@ -64,14 +64,10 @@ jobs:
         pip install opt_einsum
         pip install pytest
 
-    - name: Pytest
-      run: |
-        pytest -v --color=yes
-
-    - name: Generate coverage report
+    - name: Test and generate coverage report
       run: |
         pip install coverage
-        coverage run -m unittest
+        coverage run -m pytest
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3
