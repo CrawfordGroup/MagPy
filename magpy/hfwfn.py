@@ -96,6 +96,8 @@ class hfwfn(object):
 
             # Check for convergence
             if ((abs(ediff) < e_conv) and (abs(rms) < r_conv)):
+                self.escf = escf
+                self.C = C
                 return (escf+self.enuc), C
 
         # Convergence failure
