@@ -49,9 +49,9 @@ class ciwfn(object):
         Dijab = eps_occ.reshape(-1,1,1,1) + eps_occ.reshape(-1,1,1) - eps_vir.reshape(-1,1) - eps_vir
         self.Dijab = Dijab
 
-    def solve_cid(self, e_conv=1e-7, r_conv=1e-7, maxiter=100, alg='PROJECT'):
+    def solve_cid(self, e_conv=1e-7, r_conv=1e-7, maxiter=100, alg='PROJECTED'):
 
-        valid_algs = ['PROJECT', 'DAVIDSON']
+        valid_algs = ['PROJECTED', 'DAVIDSON']
         alg = alg.upper()
         if alg not in valid_alg:
             raise Exception("%s is not a valid choice of CI algorithm." % (alg))
@@ -82,30 +82,27 @@ class ciwfn(object):
                 eci_last = eci
 
                 r2 = self.r_T2(o, v, eci, F, ERI, t2)
-
                 t2 += r2/Dijab
 
                 rms = contract('ijab,ijab->', r2/Dijab, r2/Dijab)
                 rms = np.sqrt(rms)
 
                 eci = self.compute_cid_energy(o, v, L, t2)
-                ediff = eci - eci_last
 
+                ediff = eci - eci_last
                 print('CID Iter %3d: CID Ecorr = %.15f  dE = % .5E  rms = % .5E' % (niter, eci, ediff, rms))
 
         elif alg == 'DAVIDSON':
-
             N = M = 1 # ground state only
             maxM = 10
             sigma_done = 0
             sigma_len = no*no*nv*nv
+
             E = np.zeros((N))
+
             S = np.empty((0,sigma_len), float)
-
-            # initial guess
-            C = ERI[o,o,v,v]/Dijab
-
-            # preconditioner
+            C2 = ERI[o,o,v,v]/Dijab
+            C = np.reshape(C2, (M, sigma_len))
             Dijab = Dijab.flatten()
 
             converged = False
@@ -113,6 +110,64 @@ class ciwfn(object):
                 E_old = E
 
                 Q, _ = np.linalg.qr(C.T)
+                phase = np.diag((C @ Q)[:M])
+                phase = np.append(phase, np.ones(Q.shape[1]-M))
+                Q = phase * Q
+                C = Q.T.copy()
+                M = C.shape[0]
+
+                print("CID Iter %3d: M = %3d" % (niter, M))
+
+                # Extract guess vectors for sigma calculation
+                nvecs = M - sigma_done
+                C2 = np.reshape(C[sigma_done:M,:], (nvecs,no,no,nv,nv))
+
+                # Compute sigma vectors
+                s2 = np.zeros_like(C2)
+                for state in range(nvecs):
+                    s2[state] = self.s2(F, ERI, L, C2[state])
+                sigma_done = M
+
+                # Build and diagonalize subspace Hamiltonian
+                S = np.vstack((S, np.reshape(s2, (nvecs, sigma_len))))
+                G = C @ S.T
+                E, a = np.linalg.eig(G)
+
+                # Sort eigenvalues and corresponding eigenvectors into ascending order
+                idx = E.argsort()[:N]
+                E = E[idx]; a = a[:,idx]
+
+                # Build correction vectors
+                r = a.T @ S - np.diag(E) @ a.T @ C
+                r_norm = np.linalg.norm(r, axis=1)
+                delta = r/np.subtract.outer(E,D) # element-by-element division
+
+                if (np.abs(np.linalg.norm(dE)) <= e_conv):
+                    converged = True
+                    break
+
+                if M >= maxM:
+                    # Collapse to N vectors if subspace is too large
+                    print("\nMaximum allowed subspace dimension (%d) reached. Collapsing to N roots." % (maxM))
+                    C = a.T @ C
+                    M = N
+                    E = E_old
+                    sigma_done = 0
+                    S = np.empty((0,sigma_len), float)
+                else:
+                    # Add new vectors to guess space
+                    C = np.concatenate((C, delta[:N]))
+
+            if converged:
+                print("\nCID converged in %.3f seconds." % (time.time() - time_init))
+                print("\nState     E_h           eV")
+                print("-----  ------------  ------------")
+                eVconv = psi4.qcel.constants.get("hartree energy in ev")
+                for state in range(N):
+                    print("  %3d  %12.10f  %12.10f" %(state, E[state], E[state]*eVconv))
+
+                return E, C
+
 
 
     def r_T2(self, o, v, E, F, ERI, t2):
@@ -135,3 +190,14 @@ class ciwfn(object):
         return eci
 
 
+    def s2(self, F, ERI, L, C2):
+        s2 = contract('ijeb,ae->ijab', C2, F[v,v])
+        s2 -= contract('mi,mjab->ijab', F[o,o], C2)
+        s2 += contract('mnij,mnab->ijab', ERI[o,o,o,o], C2) * 0.5
+        s2 += contract('ijef,abef->ijab', C2, ERI[v,v,v,v]) * 0.5
+        s2 -= contract('imeb,maje->ijab', C2, ERI[o,v,o,v])
+        s2 -= contract('imea,mbej->ijab', C2, ERI[o,v,v,o])
+        s2 += contract('miea,mbej->ijab', C2, ERI[o,v,v,o]) * 2.0
+        s2 -= contract('miea,mbje->ijab', C2, ERI[o,v,o,v])
+
+        return (s2 + s2.swapaxes(01).swapaxes(2,3)).copy()
