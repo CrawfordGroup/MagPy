@@ -7,7 +7,7 @@ import numpy as np
 from .utils import *
 
 
-class AAT_HF(object):
+class AAT_CI(object):
 
     def __init__(self, molecule, charge=0, spin=1):
 

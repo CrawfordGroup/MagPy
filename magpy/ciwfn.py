@@ -45,44 +45,74 @@ class ciwfn(object):
         # Build orbital energy denominators
         eps_occ = np.diag(F)[o]
         eps_vir = np.diag(F)[v]
-        Dia = eps_occ.reshape(-1,1) - eps_vir
+        Dia = eps_occ.reshape(-1,1) - eps_vir # For later when I add singles
         Dijab = eps_occ.reshape(-1,1,1,1) + eps_occ.reshape(-1,1,1) - eps_vir.reshape(-1,1) - eps_vir
         self.Dijab = Dijab
 
-    def solve_cid(self, e_conv=1e-7, r_conv=1e-7, maxiter=100):
+    def solve_cid(self, e_conv=1e-7, r_conv=1e-7, maxiter=100, alg='PROJECT'):
+
+        valid_algs = ['PROJECT', 'DAVIDSON']
+        alg = alg.upper()
+        if alg not in valid_alg:
+            raise Exception("%s is not a valid choice of CI algorithm." % (alg))
+
         o = self.o
         v = self.v
+        no = self.no
+        nv = self.nv
         F = self.F
         ERI = self.ERI
         L = self.L
         Dijab = self.Dijab
 
-        # initial guess amplitudes
-        t2 = ERI[o,o,v,v]/Dijab
+        if alg == 'PROJECT':
+            # initial guess amplitudes
+            t2 = ERI[o,o,v,v]/Dijab
 
-        # initial CISD energy (= MP2 energy)
-        eci = self.compute_cid_energy(o, v, L, t2)
-
-        print("CID Iter %3d: CID Ecorr = %.15f  dE = % .5E  MP2" % (0, eci, -eci))
-
-        ediff = eci
-        niter = 0
-        rmsd = 0.0
-        while ((abs(ediff) > e_conv) or (abs(rmsd) > r_conv)) and (niter <= maxiter):
-            niter += 1
-            eci_last = eci
-
-            r2 = self.r_T2(o, v, eci, F, ERI, t2)
-
-            t2 += r2/Dijab
-
-            rms = contract('ijab,ijab->', r2/Dijab, r2/Dijab)
-            rms = np.sqrt(rms)
-
+            # initial CI energy (= MP2 energy)
             eci = self.compute_cid_energy(o, v, L, t2)
-            ediff = eci - eci_last
 
-            print('CID Iter %3d: CID Ecorr = %.15f  dE = % .5E  rms = % .5E' % (niter, eci, ediff, rms))
+            print("CID Iter %3d: CID Ecorr = %.15f  dE = % .5E  MP2" % (0, eci, -eci))
+
+            ediff = eci
+            niter = 0
+            rmsd = 0.0
+            while ((abs(ediff) > e_conv) or (abs(rmsd) > r_conv)) and (niter <= maxiter):
+                niter += 1
+                eci_last = eci
+
+                r2 = self.r_T2(o, v, eci, F, ERI, t2)
+
+                t2 += r2/Dijab
+
+                rms = contract('ijab,ijab->', r2/Dijab, r2/Dijab)
+                rms = np.sqrt(rms)
+
+                eci = self.compute_cid_energy(o, v, L, t2)
+                ediff = eci - eci_last
+
+                print('CID Iter %3d: CID Ecorr = %.15f  dE = % .5E  rms = % .5E' % (niter, eci, ediff, rms))
+
+        elif alg == 'DAVIDSON':
+
+            N = M = 1 # ground state only
+            maxM = 10
+            sigma_done = 0
+            sigma_len = no*no*nv*nv
+            E = np.zeros((N))
+            S = np.empty((0,sigma_len), float)
+
+            # initial guess
+            C = ERI[o,o,v,v]/Dijab
+
+            # preconditioner
+            Dijab = Dijab.flatten()
+
+            converged = False
+            for niter in range(1,maxiter+1):
+                E_old = E
+
+                Q, _ = np.linalg.qr(C.T)
 
 
     def r_T2(self, o, v, E, F, ERI, t2):
@@ -103,4 +133,5 @@ class ciwfn(object):
     def compute_cid_energy(self, o, v, L, t2):
         eci = contract('ijab,ijab->', t2, L[o,o,v,v])
         return eci
+
 
