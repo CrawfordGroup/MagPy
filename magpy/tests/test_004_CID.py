@@ -29,5 +29,8 @@ def test_CID_H2O():
     escf, C = scf.solve_scf(e_conv, r_conv, maxiter, print=1)
 
     cid = magpy.ciwfn(scf)
-    cid.solve_cid(e_conv, r_conv, maxiter)
+    cid.solve_cid(e_conv, r_conv, maxiter, alg='PROJECTED')
+    e_conv = 1e-8
+    r_conv = 1e-8
+    cid.solve_cid(e_conv, r_conv, maxiter, alg='DAVIDSON')
 
