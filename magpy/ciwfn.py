@@ -1,4 +1,5 @@
 import numpy as np
+import psi4
 from opt_einsum import contract
 import psi4
 
@@ -141,7 +142,11 @@ class ciwfn(object):
                 # Build correction vectors
                 r = a.T @ S - np.diag(E) @ a.T @ C
                 r_norm = np.linalg.norm(r, axis=1)
-                delta = r/np.subtract.outer(E,D) # element-by-element division
+                delta = r/np.subtract.outer(E,Dijab) # element-by-element division
+
+                dE = E - E_old
+                for state in range(N):
+                    print("%20.12f %20.12f %20.12f" % (E[state], dE[state], r_norm[state]))
 
                 dE = E - E_old
                 print("             E/state                   dE                 norm")
@@ -165,6 +170,7 @@ class ciwfn(object):
                     C = np.concatenate((C, delta[:N]))
 
             if converged:
+                #print("\nCID converged in %.3f seconds." % (time.time() - time_init))
                 print("\nState     E_h           eV")
                 print("-----  ------------  ------------")
                 eVconv = psi4.qcel.constants.get("hartree energy in ev")
