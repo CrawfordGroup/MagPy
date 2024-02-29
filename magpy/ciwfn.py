@@ -2,6 +2,7 @@ import numpy as np
 import psi4
 from opt_einsum import contract
 import psi4
+from .utils import diis
 
 
 class ciwfn(object):
@@ -51,7 +52,7 @@ class ciwfn(object):
         Dijab = eps_occ.reshape(-1,1,1,1) + eps_occ.reshape(-1,1,1) - eps_vir.reshape(-1,1) - eps_vir
         self.Dijab = Dijab
 
-    def solve_cid(self, e_conv=1e-7, r_conv=1e-7, maxiter=100, alg='PROJECTED'):
+    def solve_cid(self, e_conv=1e-7, r_conv=1e-7, maxiter=100, max_diis=8, start_diis=1, alg='PROJECTED'):
 
         valid_algs = ['PROJECTED', 'DAVIDSON']
         alg = alg.upper()
@@ -74,6 +75,9 @@ class ciwfn(object):
             # initial CI energy (= MP2 energy)
             eci = self.compute_cid_energy(o, v, L, C2)
 
+            # Setup DIIS object
+            diis = diis('CI', C2, max_diis)
+
             print("CID Iter %3d: CID Ecorr = %.15f  dE = % .5E  MP2" % (0, eci, -eci))
 
             ediff = eci
@@ -93,6 +97,10 @@ class ciwfn(object):
 
                 ediff = eci - eci_last
                 print('CID Iter %3d: CID Ecorr = %.15f  dE = % .5E  rms = % .5E' % (niter, eci, ediff, rms))
+
+                diis.add_error_vector([C2])
+                if niter >= start_diis:
+                    C2 = diis.extrapolate()
 
         elif alg == 'DAVIDSON':
             N = M = 1 # ground state only

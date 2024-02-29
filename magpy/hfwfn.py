@@ -59,7 +59,7 @@ class hfwfn(object):
         escf = contract('ij,ij->', D, (h+F))
 
         # Setup DIIS object
-        diis = helper_diis('SCF', F, max_diis)
+        diis = diis('SCF', F, max_diis)
 
         if print_level > 0:
             print("\n  Nuclear repulsion energy = %20.12f" % self.enuc)
@@ -76,7 +76,7 @@ class hfwfn(object):
             F = h + contract('kl,ijkl->ij', D, (2*H.ERI-H.ERI.swapaxes(1,2)))
 
             # DIIS extrapolation
-            diis.add_error_vector(F, D, H.S, X)
+            diis.add_error_vector([F, D, H.S, X])
             if niter >= start_diis:
                 F = diis.extrapolate(F)
 

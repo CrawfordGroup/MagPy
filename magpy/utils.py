@@ -127,12 +127,12 @@ class diis(object):
         else:
             self.diis_method = method
 
-        self.diis_C = [C.copy()] # List of Fock matrices or flattened amplitude array
-        self.diis_errors = [] # List of error matrices
+        self.diis_C = [C.copy()] # List of Fock matrices or concatenated amplitude arrays
+        self.diis_errors = [] # List of error matrices/vectors
         self.diis_size = 0 # Current DIIS dimension
         self.max_diis = max_diis # Maximum DIIS dimension
 
-    def add_error_vector(self, C):F, D, S, X):
+    def add_error_vector(self, C):
         if self.method == 'SCF':
             F = C[0]
             D = C[1]
@@ -142,21 +142,22 @@ class diis(object):
             e = X @ (F @ D @ S - (F @ D @ S).conj().T) @ X
         elif self.method = 'CI':
             self.diis_C.append(C.copy())
-            e = self.diis_C[-1] - 
+            e = self.diis_C[-1] - self.diis_C
+
         self.diis_errors.append(e)
 
-    def extrapolate(self, F):
+    def extrapolate(self, C):
         if(self.max_diis == 0):
-            return F
+            return C
 
         if (len(self.diis_errors) > self.max_diis):
-            del self.diis_F[0]
+            del self.diis_C[0]
             del self.diis_errors[0]
 
         self.diis_size = len(self.diis_errors)
 
         # Build DIIS matrix B
-        B = -1 * np.ones((self.diis_size + 1, self.diis_size + 1), dtype=type(F[0,0]))
+        B = -1 * np.ones((self.diis_size + 1, self.diis_size + 1))
         B[-1, -1] = 0
 
         for n1, e1 in enumerate(self.diis_errors):
@@ -167,14 +168,14 @@ class diis(object):
                 B[n1, n2] = contract('pq,pq->', e1.conjugate(), e2)
                 B[n2, n1] = B[n1, n2]
 
-        A = np.zeros((self.diis_size+1), dtype=type(F[0,0]))
+        A = np.zeros((self.diis_size+1))
         A[-1] = -1
 
         c = np.linalg.solve(B, A)
 
-        F[:,:] = 0
+        C[:,:] = 0
         for i in range(self.diis_size):
-            F = F + c[i] * self.diis_F[i+1]
+            C += c[i] * self.diis_C[i+1]
 
-        return F
+        return C
 
