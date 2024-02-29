@@ -161,11 +161,13 @@ class diis(object):
         B[-1, -1] = 0
 
         for n1, e1 in enumerate(self.diis_errors):
-            B[n1, n1] = contract('pq,pq->', e1.conjugate(), e1)
+            e1 = e1.flatten()
+            B[n1, n1] = np.dot(e1.conjugate(), e1)
             for n2, e2 in enumerate(self.diis_errors):
                 if n1 > n2:
                     continue
-                B[n1, n2] = contract('pq,pq->', e1.conjugate(), e2)
+                e2 = e2.flatten()
+                B[n1, n2] = np.dot(e1.conjugate(), e2)
                 B[n2, n1] = B[n1, n2]
 
         A = np.zeros((self.diis_size+1))
