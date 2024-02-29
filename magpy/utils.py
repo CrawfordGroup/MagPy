@@ -4,6 +4,36 @@ from itertools import permutations
 from opt_einsum import contract
 
 
+def shift_geom(molecule, R, R_disp):
+    """
+    Shift the R-th Cartesian coordinate of the given molecule geometry by
+    R_disp bohr.
+
+    Parameters
+    ----------
+    molecule: Psi4 Molecule object
+    R: R-th Cartesian coordinate, ordered as 0-2 = x, y, z on atom 0, 3-5 =
+    x, y, z on atom 1, etc.
+    R_disp: displacement size in bohr.
+
+    Returns
+    -------
+    this_mol: New molecule object with shifted geometry
+    """
+    # Clone input molecule for this perturbation
+    this_mol = molecule.clone()
+
+    # Grab the original geometry and shift the current coordinate
+    geom = np.copy(this_mol.geometry().np)
+    geom[R//3][R%3] += R_disp
+    geom = psi4.core.Matrix.from_array(geom) # Convert to Psi4 Matrix
+    this_mol.set_geometry(geom)
+    this_mol.fix_orientation(True)
+    this_mol.fix_com(True)
+    this_mol.update_geometry()
+
+    return this_mol
+
 def mo_overlap(bra, bra_basis, ket, ket_basis):
     """
     Compute the MO overlap matrix between two (possibly different) basis sets
