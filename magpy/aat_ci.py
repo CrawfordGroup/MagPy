@@ -21,27 +21,12 @@ class AAT_CI(object):
         self.spin = spin
 
 
-    def shift_geom(self, R, R_disp):
-
-        # Clone input molecule for this perturbation
-        this_mol = self.molecule.clone()
-
-        # Grab the original geometry and shift the current coordinate
-        geom = np.copy(this_mol.geometry().np)
-        geom[R//3][R%3] += R_disp
-        geom = psi4.core.Matrix.from_array(geom) # Convert to Psi4 Matrix
-        this_mol.set_geometry(geom)
-        this_mol.fix_orientation(True)
-        this_mol.fix_com(True)
-        this_mol.update_geometry()
-
-        return this_mol
-
-
     def compute(self, R_disp, B_disp, e_conv=1e-10, r_conv=1e-10, maxiter=400, max_diis=8, start_diis=1, print_level=0):
 
+        mol = self.molecule
+
         # Unperturbed Hamiltonian
-        H = magpy.Hamiltonian(self.molecule)
+        H = magpy.Hamiltonian(mol)
 
         # Compute the unperturbed HF wfn
         scf0 = magpy.hfwfn(H, self.charge, self.spin)
@@ -50,7 +35,7 @@ class AAT_CI(object):
         # Occupied MO slice
         o = slice(0,scf0.ndocc)
 
-        AAT = np.zeros((3*self.molecule.natom(), 3))
+        AAT = np.zeros((3*mol.natom(), 3))
 
         # Loop over magnetic field displacements and store (six total)
         C_B_pos = []
@@ -73,16 +58,16 @@ class AAT_CI(object):
             C_B_neg.append(match_phase(C0, H.basisset, C_B, H.basisset))
 
         # Loop over atomic coordinate displacements
-        for R in range(3*self.molecule.natom()):
+        for R in range(3*mol.natom()):
 
             # +R displacement
-            H_pos = magpy.Hamiltonian(self.shift_geom(R, R_disp))
+            H_pos = magpy.Hamiltonian(shift_geom(mol, R, R_disp))
             scf_R_pos = magpy.hfwfn(H_pos, self.charge, self.spin)
             escf_R_pos, C_R_pos = scf_R_pos.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis, print=print_level)
             C_R_pos = match_phase(C0, H.basisset, C_R_pos, H_pos.basisset)
 
             # -R displacement
-            H_neg = magpy.Hamiltonian(self.shift_geom(R, -R_disp))
+            H_neg = magpy.Hamiltonian(shift_geom(mol, R, -R_disp))
             scf_R_neg = magpy.hfwfn(H_neg, self.charge, self.spin)
             escf_R_neg, C_R_neg = scf_R_neg.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis, print=print_level)
             C_R_neg = match_phase(C0, H.basisset, C_R_neg, H_neg.basisset)

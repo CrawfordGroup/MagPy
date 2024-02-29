@@ -119,16 +119,30 @@ def det_overlap(bra, bra_basis, ket, ket_basis):
     return np.linalg.det(mo_overlap(bra, bra_basis, ket, ket_basis))
 
 
-class helper_diis(object):
-    def __init__(self, F, max_diis):
-        self.diis_F = [F.copy()] # List of Fock matrices
+class diis(object):
+    def __init__(self, method='SCF', C, max_diis):
+        valid_methods = ['SCF', 'CI']
+        if method not in valid_methods:
+            raise Exception('%s is not a valid method in MagPy\'s DIIS.' % (method))
+        else:
+            self.diis_method = method
+
+        self.diis_C = [C.copy()] # List of Fock matrices or flattened amplitude array
         self.diis_errors = [] # List of error matrices
         self.diis_size = 0 # Current DIIS dimension
         self.max_diis = max_diis # Maximum DIIS dimension
 
-    def add_error_vector(self, F, D, S, X):
-        self.diis_F.append(F.copy())
-        e = X @ (F @ D @ S - (F @ D @ S).conj().T) @ X
+    def add_error_vector(self, C):F, D, S, X):
+        if self.method == 'SCF':
+            F = C[0]
+            D = C[1]
+            S = C[2]
+            X = C[3]
+            self.diis_C.append(F.copy())
+            e = X @ (F @ D @ S - (F @ D @ S).conj().T) @ X
+        elif self.method = 'CI':
+            self.diis_C.append(C.copy())
+            e = self.diis_C[-1] - 
         self.diis_errors.append(e)
 
     def extrapolate(self, F):

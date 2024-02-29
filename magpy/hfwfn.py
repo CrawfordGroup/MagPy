@@ -5,7 +5,7 @@ import numpy as np
 from opt_einsum import contract
 import math
 import scipy.linalg
-from .utils import helper_diis
+from .utils import diis
 
 class hfwfn(object):
 
@@ -59,7 +59,7 @@ class hfwfn(object):
         escf = contract('ij,ij->', D, (h+F))
 
         # Setup DIIS object
-        diis = helper_diis(F, max_diis)
+        diis = helper_diis('SCF', F, max_diis)
 
         if print_level > 0:
             print("\n  Nuclear repulsion energy = %20.12f" % self.enuc)
