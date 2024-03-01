@@ -119,18 +119,21 @@ def det_overlap(bra, bra_basis, ket, ket_basis):
     return np.linalg.det(mo_overlap(bra, bra_basis, ket, ket_basis))
 
 
-class diis(object):
-    def __init__(self, method='SCF', C, max_diis):
+class DIIS(object):
+    def __init__(self, C, max_diis, method='SCF'):
         valid_methods = ['SCF', 'CI']
         if method not in valid_methods:
             raise Exception('%s is not a valid method in MagPy\'s DIIS.' % (method))
         else:
-            self.diis_method = method
+            self.method = method
 
         self.diis_C = [C.copy()] # List of Fock matrices or concatenated amplitude arrays
         self.diis_errors = [] # List of error matrices/vectors
         self.diis_size = 0 # Current DIIS dimension
         self.max_diis = max_diis # Maximum DIIS dimension
+
+        if self.method == 'CI':
+            self.oldC = C.copy()
 
     def add_error_vector(self, C):
         if self.method == 'SCF':
@@ -139,10 +142,12 @@ class diis(object):
             S = C[2]
             X = C[3]
             self.diis_C.append(F.copy())
-            e = X @ (F @ D @ S - (F @ D @ S).conj().T) @ X
-        elif self.method = 'CI':
-            self.diis_C.append(C.copy())
-            e = self.diis_C[-1] - self.diis_C
+            e = (X @ (F @ D @ S - (F @ D @ S).conj().T) @ X).ravel()
+        elif self.method == 'CI':
+            self.diis_C.append(C[0].copy())
+            e = (self.diis_C[-1] - self.oldC).ravel()
+            self.oldC = C[0].copy()
+            print(np.linalg.norm(e))
 
         self.diis_errors.append(e)
 
@@ -161,23 +166,26 @@ class diis(object):
         B[-1, -1] = 0
 
         for n1, e1 in enumerate(self.diis_errors):
-            e1 = e1.flatten()
-            B[n1, n1] = np.dot(e1.conjugate(), e1)
+#            B[n1, n1] = np.dot(e1.conjugate(), e1)
             for n2, e2 in enumerate(self.diis_errors):
-                if n1 > n2:
-                    continue
-                e2 = e2.flatten()
+#                if n1 > n2:
+#                    continue
                 B[n1, n2] = np.dot(e1.conjugate(), e2)
-                B[n2, n1] = B[n1, n2]
+#                B[n2, n1] = B[n1, n2]
+
+        B[:-1, :-1] /= np.abs(B[:-1, :-1]).max()
 
         A = np.zeros((self.diis_size+1))
         A[-1] = -1
 
         c = np.linalg.solve(B, A)
 
-        C[:,:] = 0
+        C *= 0
         for i in range(self.diis_size):
             C += c[i] * self.diis_C[i+1]
+
+#        if self.method == 'CI':
+#            self.oldC = C
 
         return C
 

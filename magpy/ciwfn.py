@@ -2,7 +2,7 @@ import numpy as np
 import psi4
 from opt_einsum import contract
 import psi4
-from .utils import diis
+from .utils import DIIS
 
 
 class ciwfn(object):
@@ -76,7 +76,7 @@ class ciwfn(object):
             eci = self.compute_cid_energy(o, v, L, C2)
 
             # Setup DIIS object
-            diis = diis('CI', C2, max_diis)
+            diis = DIIS(C2, max_diis, method='CI')
 
             print("CID Iter %3d: CID Ecorr = %.15f  dE = % .5E  MP2" % (0, eci, -eci))
 
@@ -100,7 +100,7 @@ class ciwfn(object):
 
                 diis.add_error_vector([C2])
                 if niter >= start_diis:
-                    C2 = diis.extrapolate()
+                    C2 = diis.extrapolate(C2)
 
         elif alg == 'DAVIDSON':
             N = M = 1 # ground state only
