@@ -44,6 +44,7 @@ class ciwfn(object):
         ESCF = 2*contract('ii->',self.h[o,o])+contract('ijij->', L[o,o,o,o])
         print("ESCF (electronic) = ", ESCF)
         print("ESCF (total) =      ", ESCF+self.hfwfn.H.enuc)
+        self.E0 = ESCF+self.hfwfn.H.enuc
 
         # Build orbital energy denominators
         eps_occ = np.diag(F)[o]
@@ -63,12 +64,15 @@ class ciwfn(object):
         v = self.v
         no = self.no
         nv = self.nv
+        E0 = self.E0
         F = self.F
         ERI = self.ERI
         L = self.L
         Dijab = self.Dijab
 
         if alg == 'PROJECTED':
+            print("\nSolving projected CID equations.")
+
             # initial guess amplitudes
             C2 = ERI[o,o,v,v]/Dijab
 
@@ -81,13 +85,11 @@ class ciwfn(object):
             print("CID Iter %3d: CID Ecorr = %.15f  dE = % .5E  MP2" % (0, eci, -eci))
 
             ediff = eci
-            niter = 0
             rmsd = 0.0
-            while ((abs(ediff) > e_conv) or (abs(rmsd) > r_conv)) and (niter <= maxiter):
-                niter += 1
+            for niter in range(1, maxiter+1):
                 eci_last = eci
 
-                r2 = self.r_T2(o, v, eci, F, ERI, C2)
+                r2 = self.r_T2(o, v, eci, F, ERI, L, C2)
                 C2 += r2/Dijab
 
                 rms = contract('ijab,ijab->', r2/Dijab, r2/Dijab)
@@ -96,13 +98,22 @@ class ciwfn(object):
                 eci = self.compute_cid_energy(o, v, L, C2)
 
                 ediff = eci - eci_last
+
                 print('CID Iter %3d: CID Ecorr = %.15f  dE = % .5E  rms = % .5E' % (niter, eci, ediff, rms))
+
+                if ((abs(ediff) < e_conv) and (abs(rms) < r_conv)):
+                    print("\nCID Equations converged.")
+                    print("CID Correlation Energy = %.15f" % (eci))
+                    print("CID Total Energy       = %.15f" % (eci + E0))
+                    return eci, C2
 
                 diis.add_error_vector([C2, r2/Dijab])
                 if niter >= start_diis:
                     C2 = diis.extrapolate(C2)
 
         elif alg == 'DAVIDSON':
+            print("\nSolving CID equations using Davidson algorithm.")
+
             N = M = 1 # ground state only
             maxM = 10
             sigma_done = 0
@@ -111,9 +122,14 @@ class ciwfn(object):
             E = np.zeros((N))
 
             S = np.empty((0,sigma_len+1), float)
+            C = np.empty((0,sigma_len+1), float)
+
+            C0 = 1.0
             C2 = ERI[o,o,v,v]/Dijab
-            C = np.reshape(C2, (M, sigma_len))
-            D = Dijab.flatten()
+            E[0] = self.compute_cid_energy(o, v, L, C2)
+
+            C = np.vstack((C, np.hstack((C0, C2.flatten()))))
+            D = np.hstack((E0, Dijab.flatten()))
 
             converged = False
             for niter in range(1,maxiter+1):
@@ -126,20 +142,20 @@ class ciwfn(object):
                 C = Q.T.copy()
                 M = C.shape[0]
 
-                print("CID Iter %3d: M = %3d" % (niter, M))
-
                 # Extract guess vectors for sigma calculation
                 nvecs = M - sigma_done
-                C2 = np.reshape(C[sigma_done:M,:], (nvecs,no,no,nv,nv))
+                C0 = C[sigma_done:M, 0]
+                C2 = np.reshape(C[sigma_done:M,1:sigma_len+1], (nvecs,no,no,nv,nv))
 
                 # Compute sigma vectors
+                s0 = np.zeros(nvecs)
                 s2 = np.zeros_like(C2)
                 for state in range(nvecs):
-                    s2[state] = self.s2(o, v, F, ERI, L, C2[state])
+                    s0[state], s2[state] = self.sigma(o, v, F, ERI, L, C0[state], C2[state])
                 sigma_done = M
 
                 # Build and diagonalize subspace Hamiltonian
-                S = np.vstack((S, np.reshape(s2, (nvecs, sigma_len))))
+                S = np.vstack((S, np.hstack((np.reshape(s0, (nvecs,1)), np.reshape(s2, (nvecs, sigma_len))))))
                 G = C @ S.T
                 E, a = np.linalg.eigh(G)
 
@@ -150,16 +166,14 @@ class ciwfn(object):
                 # Build correction vectors
                 r = a.T @ S - np.diag(E) @ a.T @ C
                 r_norm = np.linalg.norm(r, axis=1)
-                delta = r/np.subtract.outer(E,Dijab) # element-by-element division
+                delta = r/np.subtract.outer(E,D) # element-by-element division
 
                 dE = E - E_old
                 for state in range(N):
                     print("%20.12f %20.12f %20.12f" % (E[state], dE[state], r_norm[state]))
 
                 dE = E - E_old
-                print("             E/state                   dE                 norm")
-                for state in range(N):
-                    print("%20.12f %20.12f %20.12f" % (E[state], dE[state], r_norm[state]))
+                print('CID Iter %3d: CID Ecorr = %.15f  dE = % .5E  rms = % .5E  C0 = %.10f' % (niter, E[0], dE[0], r_norm[0], C0[0]))
 
                 if (np.abs(np.linalg.norm(dE)) <= e_conv):
                     converged = True
@@ -189,16 +203,17 @@ class ciwfn(object):
 
 
 
-    def r_T2(self, o, v, E, F, ERI, C2):
+    def r_T2(self, o, v, E, F, ERI, L, C2):
         r2 = 0.5 * ERI[o,o,v,v].copy()
         r2 += contract('ijae,be->ijab', C2, F[v,v])
         r2 -= contract('imab,mj->ijab', C2, F[o,o])
         r2 += 0.5 * contract('mnab,mnij->ijab', C2, ERI[o,o,o,o])
         r2 += 0.5 * contract('ijef,abef->ijab', C2, ERI[v,v,v,v])
 
-        r2 += contract('imae,mbej->ijab', (C2 - C2.swapaxes(2,3)), ERI[o,v,v,o])
-        r2 += contract('imae,mbej->ijab', C2, (ERI[o,v,v,o] - ERI[o,v,o,v].swapaxes(2,3)))
-        r2 -= contract('mjae,mbie->ijab', C2, ERI[o,v,o,v])
+        r2 -= contract('imeb,maje->ijab', C2, ERI[o,v,o,v])
+        r2 -= contract('imea,mbej->ijab', C2, ERI[o,v,v,o])
+        r2 += contract('miea,mbej->ijab', C2, L[o,v,v,o])
+
         r2 += r2.swapaxes(0,1).swapaxes(2,3)
         r2 -= E*C2
         return r2
@@ -209,19 +224,20 @@ class ciwfn(object):
         return eci
 
 
-    def s2(self, o, v, F, ERI, L, C2):
-        s2 = L[o,o,v,v].copy()
+    def sigma(self, o, v, F, ERI, L, C0, C2):
+        s0 = contract('ijab,ijab->', C2, ERI[o,o,v,v])
+
+        s2 = 0.5 * C0 * ERI[o,o,v,v].copy()
         s2 += contract('ae,ijeb->ijab', F[v,v], C2)
         s2 -= contract('mi,mjab->ijab', F[o,o], C2)
         s2 += 0.5 * contract('mnij,mnab->ijab', ERI[o,o,o,o], C2)
         s2 += 0.5 * contract('ijef,abef->ijab', C2, ERI[v,v,v,v])
-        s2 += contract('imae,mbej->ijab', (C2 - C2.swapaxes(2,3)), ERI[o,v,v,o])
-        s2 += contract('imae,mbej->ijab', C2, (ERI[o,v,v,o] - ERI[o,v,o,v].swapaxes(2,3)))
-        s2 -= contract('mjae,mbie->ijab', C2, ERI[o,v,o,v])
-#s2 -= contract('imeb,maje->ijab', C2, ERI[o,v,o,v])
-#s2 -= contract('imea,mbej->ijab', C2, ERI[o,v,v,o])
-#s2 += contract('miea,mbej->ijab', C2, L[o,v,v,o])
+        s2 -= contract('imeb,maje->ijab', C2, ERI[o,v,o,v])
+        s2 -= contract('imea,mbej->ijab', C2, ERI[o,v,v,o])
+        s2 += contract('miea,mbej->ijab', C2, L[o,v,v,o])
 
         s2 += s2.swapaxes(0,1).swapaxes(2,3)
+        s2 += E * C2
 
-        return s2
+        return s0, s2
+

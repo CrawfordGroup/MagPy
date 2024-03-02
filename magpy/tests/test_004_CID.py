@@ -29,5 +29,9 @@ def test_CID_H2O():
     escf, C = scf.solve_scf(e_conv, r_conv, maxiter, print=1)
 
     cid = magpy.ciwfn(scf)
-    cid.solve_cid(e_conv, r_conv, maxiter, alg='PROJECTED')
+    eci, C2 = cid.solve_cid(e_conv, r_conv, maxiter, alg='PROJECTED')
 
+    c4scf = -74.94207992819220
+    c4ci = -0.06865825074438
+    assert(abs(escf - c4scf) < 1e-11)
+    assert(abs(eci - c4ci) < 1e-11)
