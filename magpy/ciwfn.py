@@ -76,7 +76,7 @@ class ciwfn(object):
             eci = self.compute_cid_energy(o, v, L, C2)
 
             # Setup DIIS object
-            diis = DIIS(C2, max_diis, method='CI')
+            diis = DIIS(C2, max_diis)
 
             print("CID Iter %3d: CID Ecorr = %.15f  dE = % .5E  MP2" % (0, eci, -eci))
 
@@ -98,7 +98,7 @@ class ciwfn(object):
                 ediff = eci - eci_last
                 print('CID Iter %3d: CID Ecorr = %.15f  dE = % .5E  rms = % .5E' % (niter, eci, ediff, rms))
 
-                diis.add_error_vector([C2])
+                diis.add_error_vector([C2, r2/Dijab])
                 if niter >= start_diis:
                     C2 = diis.extrapolate(C2)
 
