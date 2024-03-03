@@ -188,11 +188,11 @@ class DIIS(object):
         B[-1, -1] = 0
 
         for n1, e1 in enumerate(self.diis_errors):
-            B[n1, n1] = np.dot(e1.conjugate(), e1)
+            B[n1, n1] = np.dot(e1.conj(), e1)
             for n2, e2 in enumerate(self.diis_errors):
                 if n1 > n2:
                     continue
-                B[n1, n2] = np.dot(e1.conjugate(), e2)
+                B[n1, n2] = np.dot(e1.conj(), e2)
                 B[n2, n1] = B[n1, n2]
 
         B[:-1, :-1] /= np.abs(B[:-1, :-1]).max()

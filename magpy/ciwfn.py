@@ -18,7 +18,6 @@ class ciwfn(object):
 
         print("\nNMO = %d; NACT = %d; NO = %d; NV = %d" % (hfwfn.nao, self.nt, self.no, self.nv))
 
-
         # Set up orbital subspace slices
         o = self.o = slice(0, no)
         v = self.v = slice(no, nt)
@@ -33,8 +32,8 @@ class ciwfn(object):
         # (core contribution to Fock operator) to the one-electron Hamiltonian
         efzc = 0
         if nfzc > 0:
-            C = self.hfwfn.C[:,:nfzc]
-            Pc = contract('pi,qi->pq', C, C)
+            C = self.hfwfn.C[:,:nfzc] # only core MOs
+            Pc = contract('pi,qi->pq', C.conj(), C)
             ERI = self.hfwfn.H.ERI
             hc = h + 2.0 * contract('pqrs,pq->rs', ERI, Pc) - contract('pqrs,ps->qr', ERI, Pc)
             efzc = contract('pq,pq->', (h+hc), Pc)
@@ -74,6 +73,7 @@ class ciwfn(object):
         Dia = eps_occ.reshape(-1,1) - eps_vir # For later when I add singles
         Dijab = eps_occ.reshape(-1,1,1,1) + eps_occ.reshape(-1,1,1) - eps_vir.reshape(-1,1) - eps_vir
         self.Dijab = Dijab
+
 
     def solve_cid(self, e_conv=1e-7, r_conv=1e-7, maxiter=100, max_diis=8, start_diis=1, alg='PROJECTED'):
 
