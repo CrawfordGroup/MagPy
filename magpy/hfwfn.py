@@ -77,7 +77,7 @@ class hfwfn(object):
 
             # DIIS extrapolation
             e = (X @ (F @ D @ H.S - (F @ D @ H.S).conj().T) @ X)
-            diis.add_error_vector([F, e])
+            diis.add_error_vector(F, e)
             if niter >= start_diis:
                 F = diis.extrapolate(F)
 

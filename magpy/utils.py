@@ -120,18 +120,60 @@ def det_overlap(bra, bra_basis, ket, ket_basis):
 
 
 class DIIS(object):
+    """
+    DIIS solver for SCF and correlated methods.
+
+    """
     def __init__(self, C, max_diis):
+        """
+        Constructor for DIIS solver.
+
+        Parameters
+        ----------
+        C: Initial set of coefficients/amplitudes to extrapolate (e.g., Fock matrix, cluster amplitudes, etc.).  The
+        coefficients must be provided as a single NumPy array, e.g., different classes of cluster amplitudes (T1, T2,
+        etc.) must be concatentated together.
+
+        Returns
+        -------
+        DIIS object
+        """
         self.diis_C = [C.copy()] # List of Fock matrices or concatenated amplitude increment arrays
         self.diis_errors = [] # List of error matrices/vectors
         self.diis_size = 0 # Current DIIS dimension
         self.max_diis = max_diis # Maximum DIIS dimension
 
-    def add_error_vector(self, C):
-        self.diis_C.append(C[0].copy())
-        e = C[1].copy()
+    def add_error_vector(self, C, e):
+        """
+        Add coefficients/amplitudes and error vectors to DIIS space.
+
+        Parameters
+        ----------
+        C: The coefficients to be extrapolated.  These must be provided as a single NumPy array, e.g., different 
+        classes of cluster amplitudes (T1, T2, etc.) must be concatentated together. 
+        e: The current error vector.  For SCF methods this should be F @ D @ S - S @ D @ F (possibly in an orthogonal
+        basis), and for CI/CC methods the current residuals divided by orbital energy denominators seem to work best.
+
+        Returns
+        -------
+        None
+        """
+        self.diis_C.append(C.copy())
         self.diis_errors.append(e.ravel())
 
     def extrapolate(self, C):
+        """
+        Extrapolate coefficients.
+
+        Parameters
+        ----------
+        C: The coefficients to be extrapolated.  These must be provided as a single NumPy array, e.g., different
+        classes of cluster amplitudes (T1, T2, etc.) must be concatentated together.
+
+        Returns
+        -------
+        C: The extrapolated coefficients as a single NumPy array.
+        """
         if(self.max_diis == 0):
             return C
 

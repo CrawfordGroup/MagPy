@@ -10,9 +10,14 @@ class ciwfn(object):
     def __init__(self, hfwfn):
 
         self.hfwfn = hfwfn
-        nt = self.nt = hfwfn.nao
-        no = self.no = hfwfn.ndocc
-        nv = self.nv = self.nt - self.no
+
+        nfzc = hfwfn.H.basisset.n_frozen_core()
+        nt = self.nt = hfwfn.nao - nfzc # assumes number of MOs = number of AOs
+        no = self.no = hfwfn.ndocc - nfzc
+        nv = self.nv = hfwfn.nao - self.no - nfzc
+
+        print("\nNMO = %d; NACT = %d; NO = %d; NV = %d" % (hfwfn.nao, self.nt, self.no, self.nv))
+
 
         # Set up orbital subspace slices
         o = self.o = slice(0, no)
@@ -20,10 +25,27 @@ class ciwfn(object):
         a = self.a = slice(0, nt)
 
         ## Transform Hamiltonian to MO basis
-        C = self.hfwfn.C
+
+        # AO-basis one-electron Hamiltonian
+        h = self.hfwfn.H.T + self.hfwfn.H.V
+
+        # If there are frozen core orbitals, build and add the frozen-core operator 
+        # (core contribution to Fock operator) to the one-electron Hamiltonian
+        efzc = 0
+        if nfzc > 0:
+            C = self.hfwfn.C[:,:nfzc]
+            Pc = contract('pi,qi->pq', C, C)
+            ERI = self.hfwfn.H.ERI
+            hc = h + 2.0 * contract('pqrs,pq->rs', ERI, Pc) - contract('pqrs,ps->qr', ERI, Pc)
+            efzc = contract('pq,pq->', (h+hc), Pc)
+            print(f"Frozen core energy = {efzc}")
+            h = hc
+
+        # Select active MOs
+        C = self.hfwfn.C[:,nfzc:]
 
         # AO->MO one-electron integral transformation
-        self.h = C.conj().T @ (self.hfwfn.H.T + self.hfwfn.H.V) @ C
+        self.h = C.conj().T @ h @ C
         self.h0 = self.h.copy() # Keep original core Hamiltonian
 
         # AO->MO two-electron integral transformation
@@ -41,7 +63,7 @@ class ciwfn(object):
         F = self.F = self.h + contract('pmqm->pq', L[a,o,a,o])
 
         # SCF check
-        ESCF = 2*contract('ii->',self.h[o,o])+contract('ijij->', L[o,o,o,o])
+        ESCF = efzc + 2.0 * contract('ii->',self.h[o,o]) + contract('ijij->', L[o,o,o,o])
         print("ESCF (electronic) = ", ESCF)
         print("ESCF (total) =      ", ESCF+self.hfwfn.H.enuc)
         self.E0 = ESCF+self.hfwfn.H.enuc
@@ -107,7 +129,7 @@ class ciwfn(object):
                     print("CID Total Energy       = %.15f" % (eci + E0))
                     return eci, C2
 
-                diis.add_error_vector([C2, r2/Dijab])
+                diis.add_error_vector(C2, r2/Dijab)
                 if niter >= start_diis:
                     C2 = diis.extrapolate(C2)
 
