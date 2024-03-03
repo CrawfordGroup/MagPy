@@ -5,6 +5,7 @@ MagPy: A Python reference implementation for including explicit magnetic fields 
 # Add imports here
 from .hamiltonian import Hamiltonian
 from .hfwfn import hfwfn
+from .ciwfn import ciwfn
 from .aat_hf import AAT_HF
 
 
