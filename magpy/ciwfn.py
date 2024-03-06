@@ -1,3 +1,6 @@
+if __name__ == "__main__":
+    raise Exception("This file cannot be invoked on its own.")
+
 import numpy as np
 import psi4
 from opt_einsum import contract
