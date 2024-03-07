@@ -20,7 +20,6 @@ def test_CID_H2O_STO3G():
     mol = psi4.geometry(moldict["H2O"])
     rhf_e, rhf_wfn = psi4.energy('SCF', return_wfn=True)
     print(f"  SCF Energy from Psi4: {rhf_e}")
-    print(f"  Frozen core = {psi4.core.get_global_option('freeze_core')}")
 
     psi4.set_options({'freeze_core': 'false'})
     H = magpy.Hamiltonian(mol)
@@ -28,7 +27,7 @@ def test_CID_H2O_STO3G():
     e_conv = 1e-13
     r_conv = 1e-13
     maxiter = 100
-    escf, C = scf.solve_scf(e_conv, r_conv, maxiter, print=1)
+    escf, C = scf.solve_scf(e_conv, r_conv, maxiter, 1)
 
     cid = magpy.ciwfn(scf)
     eci, C2 = cid.solve_cid(e_conv, r_conv, maxiter)
@@ -44,7 +43,7 @@ def test_CID_H2O_STO3G():
     e_conv = 1e-13
     r_conv = 1e-13
     maxiter = 100
-    escf, C = scf.solve_scf(e_conv, r_conv, maxiter, print=1)
+    escf, C = scf.solve_scf(e_conv, r_conv, maxiter, 1)
 
     cid = magpy.ciwfn(scf)
     eci, C2 = cid.solve_cid(e_conv, r_conv, maxiter)
@@ -75,7 +74,7 @@ def test_CID_H2O_CCPVDZ():
     e_conv = 1e-13
     r_conv = 1e-13
     maxiter = 100
-    escf, C = scf.solve_scf(e_conv, r_conv, maxiter, print=1)
+    escf, C = scf.solve_scf(e_conv, r_conv, maxiter, 1)
 
     cid = magpy.ciwfn(scf)
     eci, C2 = cid.solve_cid(e_conv, r_conv, maxiter, alg='PROJECTED')
@@ -92,7 +91,7 @@ def test_CID_H2O_CCPVDZ():
     e_conv = 1e-13
     r_conv = 1e-13
     maxiter = 100
-    escf, C = scf.solve_scf(e_conv, r_conv, maxiter, print=1)
+    escf, C = scf.solve_scf(e_conv, r_conv, maxiter, 1)
 
     cid = magpy.ciwfn(scf)
     eci, C2 = cid.solve_cid(e_conv, r_conv, maxiter)

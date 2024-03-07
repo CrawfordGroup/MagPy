@@ -30,16 +30,16 @@ class AAT_HF(object):
 
         # Compute the unperturbed HF wfn
         scf0 = magpy.hfwfn(H, self.charge, self.spin)
-        escf0, C0 = scf0.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis, print=print_level)
+        scf0.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
 
         # Occupied MO slice
         o = slice(0,scf0.ndocc)
 
         AAT = np.zeros((3*mol.natom(), 3))
 
-        # Loop over magnetic field displacements and store (six total)
-        C_B_pos = []
-        C_B_neg = []
+        # Loop over magnetic field displacements and store wave functions (six total)
+        scf_B_pos = []
+        scf_B_neg = []
         for B in range(3):
             strength = np.zeros(3)
 
@@ -47,15 +47,19 @@ class AAT_HF(object):
             H.reset_V()
             strength[B] = B_disp
             H.add_field(field='magnetic-dipole', strength=strength)
-            escf_B, C_B = scf0.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis, print=print_level)
-            C_B_pos.append(match_phase(C0, H.basisset, C_B, H.basisset))
+            scf_B = magpy.hfwfn(H, self.charge, self.spin)
+            scf_B.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
+            scf_B.match_phase(scf0)
+            scf_B_pos.append(scf_B)
 
             # -B displacement
             H.reset_V()
             strength[B] = -B_disp
             H.add_field(field='magnetic-dipole', strength=strength)
-            escf_B, C_B = scf0.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis, print=print_level)
-            C_B_neg.append(match_phase(C0, H.basisset, C_B, H.basisset))
+            scf_B = magpy.hfwfn(H, self.charge, self.spin)
+            scf_B.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
+            scf_B.match_phase(scf0)
+            scf_B_neg.append(scf_B)
 
         # Loop over atomic coordinate displacements
         for R in range(3*mol.natom()):
@@ -63,21 +67,22 @@ class AAT_HF(object):
             # +R displacement
             H_pos = magpy.Hamiltonian(shift_geom(mol, R, R_disp))
             scf_R_pos = magpy.hfwfn(H_pos, self.charge, self.spin)
-            escf_R_pos, C_R_pos = scf_R_pos.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis, print=print_level)
-            C_R_pos = match_phase(C0, H.basisset, C_R_pos, H_pos.basisset)
+            scf_R_pos.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
+            scf_R_pos.match_phase(scf0)
 
             # -R displacement
             H_neg = magpy.Hamiltonian(shift_geom(mol, R, -R_disp))
             scf_R_neg = magpy.hfwfn(H_neg, self.charge, self.spin)
-            escf_R_neg, C_R_neg = scf_R_neg.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis, print=print_level)
-            C_R_neg = match_phase(C0, H.basisset, C_R_neg, H_neg.basisset)
+            scf_R_neg.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
+            scf_R_neg.match_phase(scf0)
 
             # Compute determinantal overlaps for finite-difference
             for B in range(3):
-                pp = det_overlap(C_R_pos[:,o], H_pos.basisset, C_B_pos[B][:,o], H.basisset).imag
-                pm = det_overlap(C_R_pos[:,o], H_pos.basisset, C_B_neg[B][:,o], H.basisset).imag
-                mp = det_overlap(C_R_neg[:,o], H_neg.basisset, C_B_pos[B][:,o], H.basisset).imag
-                mm = det_overlap(C_R_neg[:,o], H_neg.basisset, C_B_neg[B][:,o], H.basisset).imag
+                print(R, B)
+                pp = det_overlap(scf_R_pos.C[:,o], scf_R_pos.H.basisset, scf_B_pos[B].C[:,o], scf_B_pos[B].H.basisset).imag
+                pm = det_overlap(scf_R_pos.C[:,o], scf_R_pos.H.basisset, scf_B_neg[B].C[:,o], scf_B_neg[B].H.basisset).imag
+                mp = det_overlap(scf_R_neg.C[:,o], scf_R_neg.H.basisset, scf_B_pos[B].C[:,o], scf_B_pos[B].H.basisset).imag
+                mm = det_overlap(scf_R_neg.C[:,o], scf_R_neg.H.basisset, scf_B_neg[B].C[:,o], scf_B_neg[B].H.basisset).imag
 
                 # Compute AAT element
                 AAT[R,B] = ((pp - pm - mp + mm)/(2*R_disp*B_disp))

@@ -14,12 +14,15 @@ class ciwfn(object):
 
         self.hfwfn = hfwfn
 
+        self.print_level = hfwfn.print_level
+
         nfzc = hfwfn.H.basisset.n_frozen_core()
         nt = self.nt = hfwfn.nao - nfzc # assumes number of MOs = number of AOs
         no = self.no = hfwfn.ndocc - nfzc
         nv = self.nv = hfwfn.nao - self.no - nfzc
 
-        print("\nNMO = %d; NACT = %d; NO = %d; NV = %d" % (hfwfn.nao, self.nt, self.no, self.nv))
+        if self.print_level > 0:
+            print("\nNMO = %d; NACT = %d; NO = %d; NV = %d" % (hfwfn.nao, self.nt, self.no, self.nv))
 
         # Set up orbital subspace slices
         o = self.o = slice(0, no)
@@ -40,7 +43,6 @@ class ciwfn(object):
             ERI = self.hfwfn.H.ERI
             hc = h + 2.0 * contract('pqrs,pq->rs', ERI, Pc) - contract('pqrs,ps->qr', ERI, Pc)
             efzc = contract('pq,pq->', (h+hc), Pc)
-            print(f"Frozen core energy = {efzc}")
             h = hc
 
         # Select active MOs
@@ -66,8 +68,9 @@ class ciwfn(object):
 
         # SCF check
         ESCF = efzc + 2.0 * contract('ii->',self.h[o,o]) + contract('ijij->', L[o,o,o,o])
-        print("ESCF (electronic) = ", ESCF)
-        print("ESCF (total) =      ", ESCF+self.hfwfn.H.enuc)
+        if self.print_level > 0:
+            print("ESCF (electronic) = ", ESCF)
+            print("ESCF (total) =      ", ESCF+self.hfwfn.H.enuc)
         self.E0 = ESCF+self.hfwfn.H.enuc
 
         # Build orbital energy denominators
@@ -96,7 +99,8 @@ class ciwfn(object):
         Dijab = self.Dijab
 
         if alg == 'PROJECTED':
-            print("\nSolving projected CID equations.")
+            if self.print_level > 0:
+                print("\nSolving projected CID equations.")
 
             # initial guess amplitudes
             C2 = ERI[o,o,v,v]/Dijab
@@ -107,7 +111,8 @@ class ciwfn(object):
             # Setup DIIS object
             diis = DIIS(C2, max_diis)
 
-            print("CID Iter %3d: CID Ecorr = %.15f  dE = % .5E  MP2" % (0, eci, -eci))
+            if self.print_level > 0:
+                print("CID Iter %3d: CID Ecorr = %.15f  dE = % .5E  MP2" % (0, eci, -eci))
 
             ediff = eci
             rmsd = 0.0
@@ -124,12 +129,14 @@ class ciwfn(object):
 
                 ediff = eci - eci_last
 
-                print('CID Iter %3d: CID Ecorr = %.15f  dE = % .5E  rms = % .5E' % (niter, eci, ediff, rms))
+                if self.print_level > 0:
+                    print('CID Iter %3d: CID Ecorr = %.15f  dE = % .5E  rms = % .5E' % (niter, eci, ediff, rms))
 
                 if ((abs(ediff) < e_conv) and (abs(rms) < r_conv)):
-                    print("\nCID Equations converged.")
-                    print("CID Correlation Energy = %.15f" % (eci))
-                    print("CID Total Energy       = %.15f" % (eci + E0))
+                    if self.print_level > 0:
+                        print("\nCID Equations converged.")
+                        print("CID Correlation Energy = %.15f" % (eci))
+                        print("CID Total Energy       = %.15f" % (eci + E0))
                     return eci, C2
 
                 diis.add_error_vector(C2, r2/Dijab)
@@ -137,7 +144,8 @@ class ciwfn(object):
                     C2 = diis.extrapolate(C2)
 
         elif alg == 'DAVIDSON':
-            print("\nSolving CID equations using Davidson algorithm.")
+            if self.print_level > 0:
+                print("\nSolving CID equations using Davidson algorithm.")
 
             N = M = 1 # ground state only
             maxM = 10
@@ -195,10 +203,12 @@ class ciwfn(object):
 
                 dE = E - E_old
                 for state in range(N):
-                    print("%20.12f %20.12f %20.12f" % (E[state], dE[state], r_norm[state]))
+                    if self.print_level > 0:
+                        print("%20.12f %20.12f %20.12f" % (E[state], dE[state], r_norm[state]))
 
                 dE = E - E_old
-                print('CID Iter %3d: CID Ecorr = %.15f  dE = % .5E  rms = % .5E  C0 = %.10f' % (niter, E[0], dE[0], r_norm[0], C0[0]))
+                if self.print_level > 0:
+                    print('CID Iter %3d: CID Ecorr = %.15f  dE = % .5E  rms = % .5E  C0 = %.10f' % (niter, E[0], dE[0], r_norm[0], C0[0]))
 
                 if (np.abs(np.linalg.norm(dE)) <= e_conv):
                     converged = True
@@ -206,7 +216,8 @@ class ciwfn(object):
 
                 if M >= maxM:
                     # Collapse to N vectors if subspace is too large
-                    print("\nMaximum allowed subspace dimension (%d) reached. Collapsing to N roots." % (maxM))
+                    if self.print_level > 0:
+                        print("\nMaximum allowed subspace dimension (%d) reached. Collapsing to N roots." % (maxM))
                     C = a.T @ C
                     M = N
                     E = E_old
@@ -218,11 +229,12 @@ class ciwfn(object):
 
             if converged:
                 #print("\nCID converged in %.3f seconds." % (time.time() - time_init))
-                print("\nState     E_h           eV")
-                print("-----  ------------  ------------")
                 eVconv = psi4.qcel.constants.get("hartree energy in ev")
-                for state in range(N):
-                    print("  %3d  %12.10f  %12.10f" %(state, E[state], E[state]*eVconv))
+                if self.print_level > 0:
+                    print("\nState     E_h           eV")
+                    print("-----  ------------  ------------")
+                    for state in range(N):
+                        print("  %3d  %12.10f  %12.10f" %(state, E[state], E[state]*eVconv))
 
                 return E, C
 

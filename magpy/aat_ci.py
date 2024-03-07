@@ -30,16 +30,11 @@ class AAT_CI(object):
 
         # Compute the unperturbed HF wfn
         scf0 = magpy.hfwfn(H, self.charge, self.spin)
-        escf0, C0 = scf0.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis, print=print_level)
+        scf0.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
 
-        # Occupied MO slice
-        o = slice(0,scf0.ndocc)
-
-        AAT = np.zeros((3*mol.natom(), 3))
-
-        # Loop over magnetic field displacements and store (six total)
-        C_B_pos = []
-        C_B_neg = []
+        # Loop over magnetic field displacements and store wave functions (six total)
+        B_pos = []
+        B_neg = []
         for B in range(3):
             strength = np.zeros(3)
 
@@ -47,39 +42,84 @@ class AAT_CI(object):
             H.reset_V()
             strength[B] = B_disp
             H.add_field(field='magnetic-dipole', strength=strength)
-            escf_B, C_B = scf0.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis, print=print_level)
-            C_B_pos.append(match_phase(C0, H.basisset, C_B, H.basisset))
+            scf = magpy.hfwfn(H, self.charge, self.spin)
+            scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
+            scf.match_phase(scf0)
+            ci = magpy.ciwfn(scf)
+            ci.solve_cid(e_conv, r_conv, maxiter, max_diis, start_diis)
+            B_pos.append(ci)
 
             # -B displacement
             H.reset_V()
             strength[B] = -B_disp
             H.add_field(field='magnetic-dipole', strength=strength)
-            escf_B, C_B = scf0.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis, print=print_level)
-            C_B_neg.append(match_phase(C0, H.basisset, C_B, H.basisset))
+            scf = magpy.hfwfn(H, self.charge, self.spin)
+            scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
+            scf.match_phase(scf0)
+            ci = magpy.ciwfn(scf)
+            ci.solve_cid(e_conv, r_conv, maxiter, max_diis, start_diis)
+            B_neg.append(ci)
 
         # Loop over atomic coordinate displacements
+        R_pos = []
+        R_neg = []
         for R in range(3*mol.natom()):
 
             # +R displacement
-            H_pos = magpy.Hamiltonian(shift_geom(mol, R, R_disp))
-            scf_R_pos = magpy.hfwfn(H_pos, self.charge, self.spin)
-            escf_R_pos, C_R_pos = scf_R_pos.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis, print=print_level)
-            C_R_pos = match_phase(C0, H.basisset, C_R_pos, H_pos.basisset)
+            H = magpy.Hamiltonian(shift_geom(mol, R, R_disp))
+            scf = magpy.hfwfn(H, self.charge, self.spin)
+            scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
+            scf.match_phase(scf0)
+            ci = magpy.ciwfn(scf)
+            ci.solve_cid(e_conv, r_conv, maxiter, max_diis, start_diis)
+            R_pos.append(ci)
 
             # -R displacement
-            H_neg = magpy.Hamiltonian(shift_geom(mol, R, -R_disp))
-            scf_R_neg = magpy.hfwfn(H_neg, self.charge, self.spin)
-            escf_R_neg, C_R_neg = scf_R_neg.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis, print=print_level)
-            C_R_neg = match_phase(C0, H.basisset, C_R_neg, H_neg.basisset)
+            H = magpy.Hamiltonian(shift_geom(mol, R, -R_disp))
+            scf = magpy.hfwfn(H, self.charge, self.spin)
+            scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
+            scf.match_phase(scf0)
+            ci = magpy.ciwfn(scf)
+            ci.solve_cid(e_conv, r_conv, maxiter, max_diis, start_diis)
+            R_neg.append(ci)
 
-            # Compute determinantal overlaps for finite-difference
+        # Compute full MO overlap matrix for all combinations of perturbed MOs
+        S = [[[0 for k in range(4)] for j in range(3)] for i in range(3*mol.natom())] # list of overlap matrices
+        for R in range(3*mol.natom()):
+            R_pos_C = R_pos[R].hfwfn.C
+            R_neg_C = R_neg[R].hfwfn.C
+            R_pos_H = R_pos[R].hfwfn.H.basisset
+            R_neg_H = R_neg[R].hfwfn.H.basisset
             for B in range(3):
-                pp = det_overlap(C_R_pos[:,o], H_pos.basisset, C_B_pos[B][:,o], H.basisset).imag
-                pm = det_overlap(C_R_pos[:,o], H_pos.basisset, C_B_neg[B][:,o], H.basisset).imag
-                mp = det_overlap(C_R_neg[:,o], H_neg.basisset, C_B_pos[B][:,o], H.basisset).imag
-                mm = det_overlap(C_R_neg[:,o], H_neg.basisset, C_B_neg[B][:,o], H.basisset).imag
+                B_pos_C = B_pos[B].hfwfn.C
+                B_neg_C = B_neg[B].hfwfn.C
+                B_pos_H = B_pos[B].hfwfn.H.basisset
+                B_neg_H = B_neg[B].hfwfn.H.basisset
+
+                S[R][B][0] = mo_overlap(R_pos_C, R_pos_H, B_pos_C, B_pos_H)
+                S[R][B][1] = mo_overlap(R_pos_C, R_pos_H, B_neg_C, B_neg_H)
+                S[R][B][2] = mo_overlap(R_neg_C, R_neg_H, B_pos_C, B_pos_H)
+                S[R][B][3] = mo_overlap(R_neg_C, R_neg_H, B_neg_C, B_neg_H)
+
+        # Compute AAT components using finite-difference
+        o = slice(0,scf0.ndocc)
+
+        # <d0/dR|d0/dB>
+        AAT_00 = np.zeros((3*mol.natom(), 3))
+        for R in range(3*mol.natom()):
+            for B in range(3):
+
+                pp = np.linalg.det(S[R][B][0][o,o]).imag
+                pm = np.linalg.det(S[R][B][1][o,o]).imag
+                mp = np.linalg.det(S[R][B][2][o,o]).imag
+                mm = np.linalg.det(S[R][B][3][o,o]).imag
 
                 # Compute AAT element
-                AAT[R,B] = ((pp - pm - mp + mm)/(2*R_disp*B_disp))
+                AAT_00[R,B] = ((pp - pm - mp + mm)/(2*R_disp*B_disp))
 
-        return AAT
+        # <d0/dR|d0/dB>
+#        AAT_00 = np.zeros((3*mol.natom(), 3))
+#        for R in range(3*mol.natom()):
+#            for B in range(3):
+
+        return AAT_00

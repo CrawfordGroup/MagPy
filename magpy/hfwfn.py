@@ -5,11 +5,11 @@ import numpy as np
 from opt_einsum import contract
 import math
 import scipy.linalg
-from .utils import DIIS
+from .utils import *
 
 class hfwfn(object):
 
-    def __init__(self, H, charge=0, spin=1):
+    def __init__(self, H, charge=0, spin=1, print_level=0):
 
         # Keep the Hamiltonian (including molecule and basisset)
         self.H = H
@@ -23,6 +23,8 @@ class hfwfn(object):
         # Determine number of orbitals
         self.nao = H.basisset.nao()
 
+        self.print_level = print_level
+
     def nelectron(self, charge):
         nelec = -charge
         for i in range(self.H.molecule.natom()):
@@ -30,10 +32,9 @@ class hfwfn(object):
 
         return nelec
 
-    def solve_scf(self, e_conv=1e-7, r_conv=1e-7, maxiter=100, max_diis=8, start_diis=1, **kwargs):
+    def solve_scf(self, e_conv=1e-7, r_conv=1e-7, maxiter=100, max_diis=8, start_diis=1):
 
-        # Suppress printing SCF output by default
-        print_level = kwargs.pop('print', 0)
+        print_level = self.print_level
 
         # Electronic Hamiltonian, including fields
         H = self.H
@@ -103,3 +104,25 @@ class hfwfn(object):
 
         # Convergence failure
         raise Exception("SCF iterations failed to converge in %d cycles." % (maxiter))
+
+
+    def match_phase(self, ref):
+        """
+        Compute the phases of the MOs in a ket state and match them to those
+        of a given bra state
+
+        Parameters
+        ----------
+        ref: MagPy hfwfn object containing the reference orbitals and basisset
+
+        Returns
+        -------
+        None, but modifies self.C in place with new phases
+        """
+        S = mo_overlap(ref.C, ref.H.basisset, self.C, self.H.basisset)
+
+        # Compute normalization constant and phase, and correct phase of ket
+        for p in range(self.C.shape[1]):
+            N = np.sqrt(S[p][p] * np.conj(S[p][p]))
+            phase = S[p][p]/N
+            self.C[:, p] *= phase**(-1)

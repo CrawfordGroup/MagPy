@@ -66,33 +66,6 @@ def mo_overlap(bra, bra_basis, ket, ket_basis):
 
     return S
 
-def match_phase(bra, bra_basis, ket, ket_basis):
-    """
-    Compute the phases of the MOs in a ket state and match them to those 
-    of a given bra state
-
-    Parameters
-    ----------
-    bra: MO coefficient matrix for the bra state (NumPy array)
-    bra_basis: Psi4 BasisSet object for the bra state
-    ket: MO coefficient matrix for the ket state (NumPy array)
-    ket_basis: Psi4 BasisSet object for the ket state
-
-    Returns
-    -------
-    new_ket: The phase-adjusted ket state (NumPy array)
-    """
-    S = mo_overlap(bra, bra_basis, ket, ket_basis)
-
-    # Compute normalization constant and phase, and correct phase of ket
-    new_ket = ket.copy()
-    for p in range(ket.shape[1]):
-        N = np.sqrt(S[p][p] * np.conj(S[p][p]))
-        phase = S[p][p]/N
-        new_ket[:, p] *= phase**(-1)
-
-    return new_ket
-
 
 # Compute overlap between two determinants in (possibly) different bases
 def det_overlap(bra, bra_basis, ket, ket_basis):
@@ -116,7 +89,9 @@ def det_overlap(bra, bra_basis, ket, ket_basis):
     if (bra.shape[0] != ket.shape[0]) or (bra.shape[1] != ket.shape[1]):
         raise Exception("Bra and Ket States do not have the same dimensions: (%d,%d) vs. (%d,%d)." % (bra.shape[0], bra.shape[1], ket.shape[0], ket.shape[1]))
 
-    return np.linalg.det(mo_overlap(bra, bra_basis, ket, ket_basis))
+    S = mo_overlap(bra, bra_basis, ket, ket_basis)
+    print(S)
+    return np.linalg.det(S)
 
 
 class DIIS(object):
