@@ -31,6 +31,7 @@ class AAT_CI(object):
         # Compute the unperturbed HF wfn
         scf0 = magpy.hfwfn(H, self.charge, self.spin)
         scf0.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
+        ci0 = magpy.ciwfn(scf0)
 
         # Loop over magnetic field displacements and store wave functions (six total)
         B_pos = []
@@ -103,6 +104,8 @@ class AAT_CI(object):
 
         # Compute AAT components using finite-difference
         o = slice(0,scf0.ndocc)
+        no = ci0.no
+        nv = ci0.nv
 
         # <d0/dR|d0/dB>
         AAT_00 = np.zeros((3*mol.natom(), 3))
@@ -118,8 +121,24 @@ class AAT_CI(object):
                 AAT_00[R,B] = ((pp - pm - mp + mm)/(2*R_disp*B_disp))
 
         # <d0/dR|d0/dB>
-#        AAT_00 = np.zeros((3*mol.natom(), 3))
-#        for R in range(3*mol.natom()):
-#            for B in range(3):
+        AAT_01 = np.zeros((3*mol.natom(), 3))
+        AAT_10 = np.zeros((3*mol.natom(), 3))
+        for R in range(3*mol.natom()):
+            ci_R_pos = R_pos[R]
+            ci_R_neg = R_neg[R]
+
+            for B in range(3):
+                ci_B_pos = B_pos[B]
+                ci_B_neg = B_neg[B]
+
+                for i in range(no):
+                    for j in range(no):
+                        for a in range(nv):
+                            for b in range(nv):
+
+                                pp = np.linalg.det(S[R][B][0][o,o]).imag
+                                pm = np.linalg.det(S[R][B][1][o,o]).imag
+                                mp = np.linalg.det(S[R][B][2][o,o]).imag
+                                mm = np.linalg.det(S[R][B][3][o,o]).imag
 
         return AAT_00
