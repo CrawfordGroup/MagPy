@@ -90,7 +90,6 @@ def det_overlap(bra, bra_basis, ket, ket_basis):
         raise Exception("Bra and Ket States do not have the same dimensions: (%d,%d) vs. (%d,%d)." % (bra.shape[0], bra.shape[1], ket.shape[0], ket.shape[1]))
 
     S = mo_overlap(bra, bra_basis, ket, ket_basis)
-    print(S)
     return np.linalg.det(S)
 
 

@@ -78,13 +78,12 @@ class AAT_HF(object):
 
             # Compute determinantal overlaps for finite-difference
             for B in range(3):
-                print(R, B)
-                pp = det_overlap(scf_R_pos.C[:,o], scf_R_pos.H.basisset, scf_B_pos[B].C[:,o], scf_B_pos[B].H.basisset).imag
-                pm = det_overlap(scf_R_pos.C[:,o], scf_R_pos.H.basisset, scf_B_neg[B].C[:,o], scf_B_neg[B].H.basisset).imag
-                mp = det_overlap(scf_R_neg.C[:,o], scf_R_neg.H.basisset, scf_B_pos[B].C[:,o], scf_B_pos[B].H.basisset).imag
-                mm = det_overlap(scf_R_neg.C[:,o], scf_R_neg.H.basisset, scf_B_neg[B].C[:,o], scf_B_neg[B].H.basisset).imag
+                pp = det_overlap(scf_R_pos.C[:,o], scf_R_pos.H.basisset, scf_B_pos[B].C[:,o], scf_B_pos[B].H.basisset)
+                pm = det_overlap(scf_R_pos.C[:,o], scf_R_pos.H.basisset, scf_B_neg[B].C[:,o], scf_B_neg[B].H.basisset)
+                mp = det_overlap(scf_R_neg.C[:,o], scf_R_neg.H.basisset, scf_B_pos[B].C[:,o], scf_B_pos[B].H.basisset)
+                mm = det_overlap(scf_R_neg.C[:,o], scf_R_neg.H.basisset, scf_B_neg[B].C[:,o], scf_B_neg[B].H.basisset)
 
                 # Compute AAT element
-                AAT[R,B] = ((pp - pm - mp + mm)/(2*R_disp*B_disp))
+                AAT[R,B] = 2*(((pp - pm - mp + mm).imag)/(4*R_disp*B_disp))
 
         return AAT
