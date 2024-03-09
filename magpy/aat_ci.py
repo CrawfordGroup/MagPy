@@ -31,7 +31,7 @@ class AAT_CI(object):
         # Compute the unperturbed HF wfn
         scf0 = magpy.hfwfn(H, self.charge, self.spin)
         scf0.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
-        ci0 = magpy.ciwfn(scf0)
+        ci0 = magpy.ciwfn(scf0) # Not strictly necessary, but handy
 
         # Loop over magnetic field displacements and store wave functions (six total)
         B_pos = []
@@ -132,11 +132,17 @@ class AAT_CI(object):
                 ci_B_neg = B_neg[B]
 
                 for i in range(no):
-                    for j in range(no):
-                        for a in range(nv):
+                    for a in range(nv):
+                        for j in range(no):
                             for b in range(nv):
 
-                                pp = np.linalg.det(S[R][B][0][o,o]).imag
+                                S_ijab = S[R][B][0].copy()
+                                S_ijab[:,[a+no,i]] = S_ijab[:,[i,a+no]]
+                                S_ijab[:,[b+no,j]] = S_ijab[:,[j,b+no]]
+                                pp = np.linalg.det(S_ijab[o,o]).imag
+                                S_ijab = S[R][B][1].copy()
+                                S_ijab[:,[a+no,i]] = S_ijab[:,[i,a+no]]
+                                S_ijab[:,[b+no,j]] = S_ijab[:,[j,b+no]]
                                 pm = np.linalg.det(S[R][B][1][o,o]).imag
                                 mp = np.linalg.det(S[R][B][2][o,o]).imag
                                 mm = np.linalg.det(S[R][B][3][o,o]).imag
