@@ -5,6 +5,7 @@ import psi4
 import magpy
 import numpy as np
 from .utils import *
+import pickle
 
 
 class AAT_CI(object):
@@ -102,6 +103,9 @@ class AAT_CI(object):
                 S[R][B][2] = mo_overlap(R_neg_C, R_neg_H, B_pos_C, B_pos_H)
                 S[R][B][3] = mo_overlap(R_neg_C, R_neg_H, B_neg_C, B_neg_H)
 
+        with open("overlaps.pkl", "wb") as f:
+            pickle.dump(S, f)
+
         # Compute AAT components using finite-difference
         o = slice(0,scf0.ndocc)
         no = ci0.no
@@ -112,15 +116,15 @@ class AAT_CI(object):
         for R in range(3*mol.natom()):
             for B in range(3):
 
-                pp = np.linalg.det(S[R][B][0][o,o]).imag
-                pm = np.linalg.det(S[R][B][1][o,o]).imag
-                mp = np.linalg.det(S[R][B][2][o,o]).imag
-                mm = np.linalg.det(S[R][B][3][o,o]).imag
+                pp = np.linalg.det(S[R][B][0][o,o])
+                pm = np.linalg.det(S[R][B][1][o,o])
+                mp = np.linalg.det(S[R][B][2][o,o])
+                mm = np.linalg.det(S[R][B][3][o,o])
 
                 # Compute AAT element
-                AAT_00[R,B] = ((pp - pm - mp + mm)/(2*R_disp*B_disp))
+                AAT_00[R,B] = 2*(((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
 
-        # <d0/dR|d0/dB>
+        # <d0/dR|dD/dB>
         AAT_01 = np.zeros((3*mol.natom(), 3))
         AAT_10 = np.zeros((3*mol.natom(), 3))
         for R in range(3*mol.natom()):
@@ -136,13 +140,15 @@ class AAT_CI(object):
                         for j in range(no):
                             for b in range(nv):
 
+                                S_ia = S[R][B][0].copy()
+                                S_ia[:,[a+no,i]] = S_ia[:,[i,a+no]]
+                                S_jb = S[R][B][0].copy()
+                                S_jb[:,[b+no,j]] = S_jb[:,[j,b+no]]
                                 S_ijab = S[R][B][0].copy()
                                 S_ijab[:,[a+no,i]] = S_ijab[:,[i,a+no]]
                                 S_ijab[:,[b+no,j]] = S_ijab[:,[j,b+no]]
                                 pp = np.linalg.det(S_ijab[o,o]).imag
                                 S_ijab = S[R][B][1].copy()
-                                S_ijab[:,[a+no,i]] = S_ijab[:,[i,a+no]]
-                                S_ijab[:,[b+no,j]] = S_ijab[:,[j,b+no]]
                                 pm = np.linalg.det(S[R][B][1][o,o]).imag
                                 mp = np.linalg.det(S[R][B][2][o,o]).imag
                                 mm = np.linalg.det(S[R][B][3][o,o]).imag
