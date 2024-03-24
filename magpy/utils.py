@@ -68,28 +68,20 @@ def mo_overlap(bra, bra_basis, ket, ket_basis):
 
 
 # Compute overlap between two determinants in (possibly) different bases
-def det_overlap(bra, bra_basis, ket, ket_basis):
+def det_overlap(bra_indices, ket_indices, S):
     """
-    Compute the overlap between two Slater determinants (represented by their
-    MO coefficient matrices) of equal length in (possibly) different basis
-    sets using the determinant of their overlap
+    Compute the overlap between two Slater determinants (represented by strings of indices)
+    of equal length in (possibly) different basis sets using the determinant of their overlap.
 
     Parameters
     ----------
-    bra: MO coefficient matrix for the bra state (NumPy array)
-    bra_basis: Psi4 BasisSet object for the bra state
-    ket: MO coefficient matrix for the ket state (NumPy array)
-    ket_basis: Psi4 BasisSet object for the ket state
-
-    Returns
-    -------
-    overlap: scalar
+    bra_indices: list of substitution indices
+    ket_indices: list of substitution indices
+    S: MO overlap between bra and ket bases (NumPy array)
     """
-    # Sanity check
-    if (bra.shape[0] != ket.shape[0]) or (bra.shape[1] != ket.shape[1]):
-        raise Exception("Bra and Ket States do not have the same dimensions: (%d,%d) vs. (%d,%d)." % (bra.shape[0], bra.shape[1], ket.shape[0], ket.shape[1]))
 
-    S = mo_overlap(bra, bra_basis, ket, ket_basis)
+    if bra_indices
+
     return np.linalg.det(S)
 
 

@@ -103,9 +103,6 @@ class AAT_CI(object):
                 S[R][B][2] = mo_overlap(R_neg_C, R_neg_H, B_pos_C, B_pos_H)
                 S[R][B][3] = mo_overlap(R_neg_C, R_neg_H, B_neg_C, B_neg_H)
 
-        with open("overlaps.pkl", "wb") as f:
-            pickle.dump(S, f)
-
         # Compute AAT components using finite-difference
         o = slice(0,scf0.ndocc)
         no = ci0.no
@@ -140,6 +137,7 @@ class AAT_CI(object):
                         for j in range(no):
                             for b in range(nv):
 
+                                det_0D = det_overlap([0], 'AA', [i, a+no, j, b+no], 'AA', S[R][B][0])
                                 S_ia = S[R][B][0].copy()
                                 S_ia[:,[a+no,i]] = S_ia[:,[i,a+no]]
                                 S_jb = S[R][B][0].copy()
