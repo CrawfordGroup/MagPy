@@ -68,7 +68,7 @@ def mo_overlap(bra, bra_basis, ket, ket_basis):
 
 
 # Compute overlap between two determinants in (possibly) different bases
-def det_overlap(bra_indices, ket_indices, S):
+def det_overlap(bra_indices, bra_spin, ket_indices, ket_spin, S, o):
     """
     Compute the overlap between two Slater determinants (represented by strings of indices)
     of equal length in (possibly) different basis sets using the determinant of their overlap.
@@ -76,13 +76,37 @@ def det_overlap(bra_indices, ket_indices, S):
     Parameters
     ----------
     bra_indices: list of substitution indices
+    bra_spin: 'AA' or 'AB' (string)
     ket_indices: list of substitution indices
+    ket_spin: 'AA' or 'AB' (string)
     S: MO overlap between bra and ket bases (NumPy array)
+    o: Slice of S needed for determinant
     """
 
-    if bra_indices
+    S_alpha = S.copy()
+    S_beta = S.copy()
 
-    return np.linalg.det(S)
+    if len(bra_indices) == 4: # double excitation
+        i = bra_indices[0]; a = bra_indices[1]
+        j = bra_indices[2]; b = bra_indices[3]
+        if bra_spin == 'AA':
+            S_alpha[[a,i],:] = S_alpha[[i,a],:]
+            S_alpha[[b,j],:] = S_alpha[[j,b],:]
+        elif bra_spin == 'AB':
+            S_alpha[[a,i],:] = S_alpha[[i,a],:]
+            S_beta[[b,j],:] = S_beta[[j,b],:]
+
+    if len(ket_indices) == 4: # double excitation
+        i = ket_indices[0]; a = ket_indices[1]
+        j = ket_indices[2]; b = ket_indices[3]
+        if ket_spin == 'AA':
+            S_alpha[:,[a,i]] = S_alpha[:,[i,a]]
+            S_alpha[:,[b,j]] = S_alpha[:,[j,b]]
+        elif ket_spin == 'AB':
+            S_alpha[:,[a,i]] = S_alpha[:,[i,a]]
+            S_beta[:,[b,j]] = S_beta[:,[j,b]]
+
+    return np.linalg.det(S_alpha[o,o])*np.linalg.det(S_beta[o,o])
 
 
 class DIIS(object):

@@ -25,7 +25,10 @@ def test_AAT_CID_H2O():
 
     r_disp = 0.0001
     b_disp = 0.0001
-    I = AAT.compute(r_disp, b_disp)
+    I_00, I_0D, I_D0 = AAT.compute(r_disp, b_disp)
     print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
-    print(I)
+    print(I_00)
+    print(I_0D)
+    print(I_D0)
+    print(I_0D+I_D0)
 

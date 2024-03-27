@@ -121,6 +121,7 @@ class ciwfn(object):
 
                 r2 = self.r_T2(o, v, eci, F, ERI, L, C2)
                 C2 += r2/Dijab
+                self.C2 = C2
 
                 rms = contract('ijab,ijab->', r2/Dijab, r2/Dijab)
                 rms = np.sqrt(rms)
