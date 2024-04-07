@@ -9,7 +9,7 @@ from .utils import *
 
 class AAT_CI(object):
 
-    def __init__(self, molecule, charge=0, spin=1):
+    def __init__(self, molecule, charge=0, spin=1, print_level=0):
 
         # Ensure geometry remains fixed in space
         molecule.fix_orientation(True)
@@ -19,6 +19,7 @@ class AAT_CI(object):
 
         self.charge = charge
         self.spin = spin
+        self.print_level = print_level
 
 
     def compute(self, R_disp, B_disp, e_conv=1e-10, r_conv=1e-10, maxiter=400, max_diis=8, start_diis=1, print_level=0):
@@ -29,7 +30,7 @@ class AAT_CI(object):
         H = magpy.Hamiltonian(mol)
 
         # Compute the unperturbed HF wfn
-        scf0 = magpy.hfwfn(H, self.charge, self.spin)
+        scf0 = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
         scf0.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
         ci0 = magpy.ciwfn(scf0) # Not strictly necessary, but handy
 
@@ -43,7 +44,7 @@ class AAT_CI(object):
             H.reset_V()
             strength[B] = B_disp
             H.add_field(field='magnetic-dipole', strength=strength)
-            scf = magpy.hfwfn(H, self.charge, self.spin)
+            scf = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
             scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
             scf.match_phase(scf0)
             ci = magpy.ciwfn(scf)
@@ -54,12 +55,14 @@ class AAT_CI(object):
             H.reset_V()
             strength[B] = -B_disp
             H.add_field(field='magnetic-dipole', strength=strength)
-            scf = magpy.hfwfn(H, self.charge, self.spin)
+            scf = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
             scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
             scf.match_phase(scf0)
             ci = magpy.ciwfn(scf)
             ci.solve_cid(e_conv, r_conv, maxiter, max_diis, start_diis)
             B_neg.append(ci)
+
+        return
 
         # Loop over atomic coordinate displacements
         R_pos = []
@@ -68,7 +71,7 @@ class AAT_CI(object):
 
             # +R displacement
             H = magpy.Hamiltonian(shift_geom(mol, R, R_disp))
-            scf = magpy.hfwfn(H, self.charge, self.spin)
+            scf = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
             scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
             scf.match_phase(scf0)
             ci = magpy.ciwfn(scf)
@@ -77,12 +80,14 @@ class AAT_CI(object):
 
             # -R displacement
             H = magpy.Hamiltonian(shift_geom(mol, R, -R_disp))
-            scf = magpy.hfwfn(H, self.charge, self.spin)
+            scf = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
             scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
             scf.match_phase(scf0)
             ci = magpy.ciwfn(scf)
             ci.solve_cid(e_conv, r_conv, maxiter, max_diis, start_diis)
             R_neg.append(ci)
+
+        return
 
         # Compute full MO overlap matrix for all combinations of perturbed MOs
         S = [[[0 for k in range(4)] for j in range(3)] for i in range(3*mol.natom())] # list of overlap matrices
@@ -130,8 +135,8 @@ class AAT_CI(object):
                 ci_B_pos = B_pos[B]
                 ci_B_neg = B_neg[B]
 
-                # <d0/dR|dD/dB>
                 pp = pm = mp = mm = 0.0
+
                 for i in range(no):
                     for a in range(nv):
                         for j in range(no):
@@ -168,11 +173,11 @@ class AAT_CI(object):
 
                                 det_AA = det_overlap([i, a+no, j, b+no], 'AA', [0], 'AA', S[R][B][1], o)
                                 det_AB = det_overlap([i, a+no, j, b+no], 'AB', [0], 'AB', S[R][B][1], o)
-                                pm += 0.5 * (ci_R_neg.C2[i,j,a,b] - ci_R_neg.C2[i,j,b,a]) * det_AA + ci_R_neg.C2[i,j,a,b] * det_AB
+                                pm += 0.5 * (ci_R_pos.C2[i,j,a,b] - ci_R_pos.C2[i,j,b,a]) * det_AA + ci_R_pos.C2[i,j,a,b] * det_AB
 
                                 det_AA = det_overlap([i, a+no, j, b+no], 'AA', [0], 'AA', S[R][B][2], o)
                                 det_AB = det_overlap([i, a+no, j, b+no], 'AB', [0], 'AB', S[R][B][2], o)
-                                mp += 0.5 * (ci_R_pos.C2[i,j,a,b] - ci_R_pos.C2[i,j,b,a]) * det_AA + ci_R_pos.C2[i,j,a,b] * det_AB
+                                mp += 0.5 * (ci_R_neg.C2[i,j,a,b] - ci_R_neg.C2[i,j,b,a]) * det_AA + ci_R_neg.C2[i,j,a,b] * det_AB
 
                                 det_AA = det_overlap([i, a+no, j, b+no], 'AA', [0], 'AA', S[R][B][3], o)
                                 det_AB = det_overlap([i, a+no, j, b+no], 'AB', [0], 'AB', S[R][B][3], o)

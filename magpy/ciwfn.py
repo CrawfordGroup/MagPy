@@ -17,12 +17,13 @@ class ciwfn(object):
         self.print_level = hfwfn.print_level
 
         nfzc = hfwfn.H.basisset.n_frozen_core()
-        nt = self.nt = hfwfn.nao - nfzc # assumes number of MOs = number of AOs
+
+        nt = self.nt = hfwfn.nbf - nfzc # assumes number of MOs = number of AOs
         no = self.no = hfwfn.ndocc - nfzc
-        nv = self.nv = hfwfn.nao - self.no - nfzc
+        nv = self.nv = hfwfn.nbf - self.no - nfzc
 
         if self.print_level > 0:
-            print("\nNMO = %d; NACT = %d; NO = %d; NV = %d" % (hfwfn.nao, self.nt, self.no, self.nv))
+            print("\nNMO = %d; NACT = %d; NO = %d; NV = %d" % (hfwfn.nbf, self.nt, self.no, self.nv))
 
         # Set up orbital subspace slices
         o = self.o = slice(0, no)
@@ -71,7 +72,9 @@ class ciwfn(object):
         if self.print_level > 0:
             print("ESCF (electronic) = ", ESCF)
             print("ESCF (total) =      ", ESCF+self.hfwfn.H.enuc)
-        self.E0 = ESCF+self.hfwfn.H.enuc
+            print("HFWFN ESCF (electronic) = ", self.hfwfn.escf)
+            print("HFWFN ESCF (total) =      ", self.hfwfn.escf + self.hfwfn.enuc)
+        self.E0 = self.hfwfn.escf + self.hfwfn.H.enuc
 
         # Build orbital energy denominators
         eps_occ = np.diag(F)[o]
@@ -112,7 +115,7 @@ class ciwfn(object):
             diis = DIIS(C2, max_diis)
 
             if self.print_level > 0:
-                print("CID Iter %3d: CID Ecorr = %.15f  dE = % .5E  MP2" % (0, eci, -eci))
+                print("CID Iter %3d: CID Ecorr = %.15f  dE = %.5E  MP2" % (0, eci, -eci))
 
             ediff = eci
             rmsd = 0.0
@@ -131,13 +134,13 @@ class ciwfn(object):
                 ediff = eci - eci_last
 
                 if self.print_level > 0:
-                    print('CID Iter %3d: CID Ecorr = %.15f  dE = % .5E  rms = % .5E' % (niter, eci, ediff, rms))
+                    print('CID Iter %3d: CID Ecorr = %.15f  dE = %.5E  rms = %.5E' % (niter, eci, ediff, rms))
 
                 if ((abs(ediff) < e_conv) and (abs(rms) < r_conv)):
                     if self.print_level > 0:
                         print("\nCID Equations converged.")
-                        print("CID Correlation Energy = %.15f" % (eci))
-                        print("CID Total Energy       = %.15f" % (eci + E0))
+                        print("CID Correlation Energy = ", eci)
+                        print("CID Total Energy       = ", eci + E0)
                     return eci, C2
 
                 diis.add_error_vector(C2, r2/Dijab)
@@ -258,7 +261,7 @@ class ciwfn(object):
 
 
     def compute_cid_energy(self, o, v, L, t2):
-        eci = contract('ijab,ijab->', t2, L[o,o,v,v])
+        eci = 1.0 * contract('ijab,ijab->', t2, L[o,o,v,v])
         return eci
 
 

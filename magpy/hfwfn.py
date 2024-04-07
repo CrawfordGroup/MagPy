@@ -21,7 +21,7 @@ class hfwfn(object):
         self.ndocc = nelec//2;
 
         # Determine number of orbitals
-        self.nao = H.basisset.nao()
+        self.nbf = H.basisset.nbf()
 
         self.print_level = print_level
 

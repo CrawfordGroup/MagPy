@@ -7,7 +7,7 @@ import os
 
 np.set_printoptions(precision=10, linewidth=200, threshold=200, suppress=True)
 
-def test_CID_H2O_STO3G():
+def test_CID_SO_H2O_STO3G():
 
     psi4.set_memory('2 GB')
     psi4.set_output_file('output.dat', False)
@@ -29,8 +29,8 @@ def test_CID_H2O_STO3G():
     maxiter = 100
     escf, C = scf.solve_scf(e_conv, r_conv, maxiter)
 
-    cid = magpy.ciwfn(scf)
-    eci, C2 = cid.solve_cid(e_conv, r_conv, maxiter)
+    cid = magpy.ciwfn_so(scf)
+    eci, C2 = cid.solve(e_conv, r_conv, maxiter)
 
     c4scf = -74.94207992819220
     c4ci = -0.06865825074438
@@ -45,8 +45,8 @@ def test_CID_H2O_STO3G():
     maxiter = 100
     escf, C = scf.solve_scf(e_conv, r_conv, maxiter)
 
-    cid = magpy.ciwfn(scf)
-    eci, C2 = cid.solve_cid(e_conv, r_conv, maxiter)
+    cid = magpy.ciwfn_so(scf)
+    eci, C2 = cid.solve(e_conv, r_conv, maxiter)
 
     c4scf = -74.94207992819220
     c4ci = -0.06859643905558
@@ -54,7 +54,7 @@ def test_CID_H2O_STO3G():
     assert(abs(eci - c4ci) < 1e-11)
 
 
-def test_CID_H2O_CCPVDZ():
+def test_CID_SO_H2O_CCPVDZ():
 
     psi4.set_memory('2 GB')
     psi4.set_output_file('output.dat', False)
@@ -76,8 +76,8 @@ def test_CID_H2O_CCPVDZ():
     maxiter = 100
     escf, C = scf.solve_scf(e_conv, r_conv, maxiter)
 
-    cid = magpy.ciwfn(scf)
-    eci, C2 = cid.solve_cid(e_conv, r_conv, maxiter, alg='PROJECTED')
+    cid = magpy.ciwfn_so(scf)
+    eci, C2 = cid.solve(e_conv, r_conv, maxiter)
 
     # Compae to CFOUR results
     c4scf = -75.98979581991861
@@ -93,8 +93,8 @@ def test_CID_H2O_CCPVDZ():
     maxiter = 100
     escf, C = scf.solve_scf(e_conv, r_conv, maxiter)
 
-    cid = magpy.ciwfn(scf)
-    eci, C2 = cid.solve_cid(e_conv, r_conv, maxiter)
+    cid = magpy.ciwfn_so(scf)
+    eci, C2 = cid.solve(e_conv, r_conv, maxiter)
 
     c4scf = -75.98979581991861
     c4ci = -0.21098966441656

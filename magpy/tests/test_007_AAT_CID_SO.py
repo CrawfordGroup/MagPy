@@ -21,7 +21,7 @@ def test_AAT_CID_H2O():
     rhf_e, rhf_wfn = psi4.energy('SCF', return_wfn=True)
     print(f"  SCF Energy from Psi4: {rhf_e}")
 
-    AAT = magpy.AAT_CI(mol, 0, 1, 1)
+    AAT = magpy.AAT_CI_SO(mol, 0, 1, 1)
 
     r_disp = 0.0001
     b_disp = 0.0001
@@ -30,8 +30,12 @@ def test_AAT_CID_H2O():
     AAT.compute(r_disp, b_disp, e_conv, r_conv)
 #    print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
 #    print(I_00)
+#    print("\n")
 #    print(I_0D)
+#    print("\n")
 #    print(I_D0)
+#    print("\n")
 #    print(I_0D+I_D0)
+#    print("\n")
 #    print(I_DD)
 
