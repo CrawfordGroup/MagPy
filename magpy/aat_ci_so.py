@@ -66,6 +66,8 @@ class AAT_CI_SO(object):
             ci.solve(e_conv, r_conv, maxiter, max_diis, start_diis)
             B_neg.append(ci)
 
+        return
+
         # Loop over atomic coordinate displacements
         R_pos = []
         R_neg = []
@@ -218,7 +220,7 @@ class AAT_CI_SO(object):
     def mo_overlap(self, bra, bra_basis, ket, ket_basis):
         """
         Compute the MO overlap matrix between two (possibly different) basis sets
-    
+
         Parameters
         ----------
         bra: MO coefficient matrix for the bra state (NumPy array)

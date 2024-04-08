@@ -22,6 +22,7 @@ class ciwfn_so(object):
 
         # AO-basis one-electron Hamiltonian
         h = self.hfwfn.H.T + self.hfwfn.H.V
+        print(h)
 
         # If there are frozen core orbitals, build and add the frozen-core operator 
         # (core contribution to Fock operator) to the one-electron Hamiltonian
@@ -81,9 +82,11 @@ class ciwfn_so(object):
 
         # Build MO-basis Fock matrix (diagonal for canonical MOs, but we don't assume that)
         F = self.F = self.h + contract('pmqm->pq', ERI[a,o,a,o])
+        print(F)
+        print(self.hfwfn.eps)
 
         # SCF check
-        ESCF = efzc + contract('ii->',self.h[o,o]) + 0.5 * contract('ijij->', ERI[o,o,o,o])
+        ESCF = contract('ii->',self.h[o,o]) + 0.5 * contract('ijij->', ERI[o,o,o,o])
         if self.print_level > 0:
             print("ESCF (electronic) = ", ESCF)
             print("ESCF (total) =      ", ESCF+self.hfwfn.H.enuc)

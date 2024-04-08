@@ -100,6 +100,7 @@ class hfwfn(object):
             if ((abs(ediff) < e_conv) and (abs(rms) < r_conv)):
                 self.escf = escf
                 self.C = C
+                self.eps = eps
                 return (escf+self.enuc), C
 
         # Convergence failure
