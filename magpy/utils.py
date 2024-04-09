@@ -174,7 +174,7 @@ class DIIS(object):
         self.diis_size = len(self.diis_errors)
 
         # Build DIIS matrix B
-        B = -1 * np.ones((self.diis_size + 1, self.diis_size + 1))
+        B = -1 * np.ones((self.diis_size + 1, self.diis_size + 1), dtype=self.diis_errors[0].dtype)
         B[-1, -1] = 0
 
         for n1, e1 in enumerate(self.diis_errors):
