@@ -245,7 +245,7 @@ class ciwfn(object):
 
 
     def r_T2(self, o, v, E, F, ERI, L, C2):
-        r2 = 0.5 * ERI[o,o,v,v].copy()
+        r2 = 0.5 * ERI[v,v,o,o].swapaxes(0,2).swapaxes(1,3).copy()
         r2 += contract('ijae,be->ijab', C2, F[v,v])
         r2 -= contract('imab,mj->ijab', C2, F[o,o])
         r2 += 0.5 * contract('mnab,mnij->ijab', C2, ERI[o,o,o,o])

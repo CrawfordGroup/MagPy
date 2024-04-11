@@ -66,8 +66,6 @@ class AAT_CI_SO(object):
             ci.solve(e_conv, r_conv, maxiter, max_diis, start_diis)
             B_neg.append(ci)
 
-        return
-
         # Loop over atomic coordinate displacements
         R_pos = []
         R_neg = []
@@ -94,8 +92,6 @@ class AAT_CI_SO(object):
             ci = magpy.ciwfn_so(scf)
             ci.solve(e_conv, r_conv, maxiter, max_diis, start_diis)
             R_neg.append(ci)
-
-        return
 
         # Compute full MO overlap matrix for all combinations of perturbed MOs
         S = [[[0 for k in range(4)] for j in range(3)] for i in range(3*mol.natom())] # list of overlap matrices

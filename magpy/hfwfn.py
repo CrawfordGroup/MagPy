@@ -44,7 +44,6 @@ class hfwfn(object):
 
         # Core Hamiltonian
         h = H.T + H.V
-        print(h)
 
         # Symmetric orthogonalizer
         X = scipy.linalg.fractional_matrix_power(H.S, -0.5)
@@ -56,10 +55,9 @@ class hfwfn(object):
         C = X @ Cp
         C_occ = C[:,:self.ndocc]
         D = C_occ @ C_occ.T.conj()
-        print(D)
 
         # Compute the initial-guess energy
-        escf = contract('ij,ij->', D, (h+F))
+        escf = contract('ij,ji->', D, (h+F))
 
         # Setup DIIS object
         diis = DIIS(F, max_diis)
@@ -90,7 +88,7 @@ class hfwfn(object):
             C_occ = C[:,:self.ndocc]
             D = C_occ @ C_occ.T.conj()
 
-            escf = contract('ij,ij->', D, (h+F))
+            escf = contract('ij,ji->', D, (h+F))
 
             ediff = (escf - escf_last).real
             rms = np.linalg.norm(D-D_last).real

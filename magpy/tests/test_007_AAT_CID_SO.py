@@ -27,15 +27,15 @@ def test_AAT_CID_H2O():
     b_disp = 0.0001
     e_conv = 1e-13
     r_conv = 1e-13
-    AAT.compute(r_disp, b_disp, e_conv, r_conv)
-#    print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
-#    print(I_00)
-#    print("\n")
-#    print(I_0D)
-#    print("\n")
-#    print(I_D0)
-#    print("\n")
-#    print(I_0D+I_D0)
-#    print("\n")
-#    print(I_DD)
+    I_00, I_0D, I_D0, I_DD = AAT.compute(r_disp, b_disp, e_conv, r_conv)
+    print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
+    print(I_00)
+    print("\n")
+    print(I_0D)
+    print("\n")
+    print(I_D0)
+    print("\n")
+    print(I_0D+I_D0)
+    print("\n")
+    print(I_DD)
 
