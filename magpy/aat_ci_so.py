@@ -32,54 +32,57 @@ class AAT_CI_SO(object):
         # Compute the unperturbed HF wfn
         scf0 = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
         scf0.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
+        print(H.molecule.geometry().np)
+        print("Psi4 SCF = ", self.run_psi4_scf(H.molecule))
         ci0 = magpy.ciwfn_so(scf0) # Not strictly necessary, but handy
 
         # Loop over magnetic field displacements and store wave functions (six total)
-        B_pos = []
-        B_neg = []
-        for B in range(3):
-            strength = np.zeros(3)
-
-            # +B displacement
-            if self.print_level > 0:
-                print("B(%d)+ Displacement" % (B))
-            H.reset_V()
-            strength[B] = B_disp
-            H.add_field(field='magnetic-dipole', strength=strength)
-            scf = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
-            scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
-            scf.match_phase(scf0)
-            ci = magpy.ciwfn_so(scf)
-            ci.solve(e_conv, r_conv, maxiter, max_diis, start_diis)
-            B_pos.append(ci)
-
-            # -B displacement
-            if self.print_level > 0:
-                print("B(%d)- Displacement" % (B))
-            H.reset_V()
-            strength[B] = -B_disp
-            H.add_field(field='magnetic-dipole', strength=strength)
-            scf = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
-            scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
-            scf.match_phase(scf0)
-            ci = magpy.ciwfn_so(scf)
-            ci.solve(e_conv, r_conv, maxiter, max_diis, start_diis)
-            B_neg.append(ci)
+#        B_pos = []
+#        B_neg = []
+#        for B in range(3):
+#            strength = np.zeros(3)
+#
+#            # +B displacement
+#            if self.print_level > 0:
+#                print("B(%d)+ Displacement" % (B))
+#            H.reset_V()
+#            strength[B] = B_disp
+#            H.add_field(field='magnetic-dipole', strength=strength)
+#            scf = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
+#            scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
+#            scf.match_phase(scf0)
+#            ci = magpy.ciwfn_so(scf)
+#            ci.solve(e_conv, r_conv, maxiter, max_diis, start_diis)
+#            B_pos.append(ci)
+#
+#            # -B displacement
+#            if self.print_level > 0:
+#                print("B(%d)- Displacement" % (B))
+#            H.reset_V()
+#            strength[B] = -B_disp
+#            H.add_field(field='magnetic-dipole', strength=strength)
+#            scf = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
+#            scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
+#            scf.match_phase(scf0)
+#            ci = magpy.ciwfn_so(scf)
+#            ci.solve(e_conv, r_conv, maxiter, max_diis, start_diis)
+#            B_neg.append(ci)
 
         # Loop over atomic coordinate displacements
         R_pos = []
         R_neg = []
-        for R in range(3*mol.natom()):
+#        for R in range(3*mol.natom()):
+        for R in range(1):
 
             # +R displacement
             if self.print_level > 0:
                 print("R(%d)+ Displacement" % (R))
             H = magpy.Hamiltonian(shift_geom(mol, R, R_disp))
-#            psi4.geometry(H.molecule)
-#            rhf_e = psi4.energy('SCF')
-#            print("Psi4 SCF = ", rhf_e)
             scf = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
             scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
+            print(H.molecule.create_psi4_string_from_molecule())
+            print(H.molecule.geometry().np)
+            print("Psi4 SCF = ", self.run_psi4_scf(H.molecule))
             scf.match_phase(scf0)
             ci = magpy.ciwfn_so(scf)
             ci.solve(e_conv, r_conv, maxiter, max_diis, start_diis)
@@ -91,6 +94,7 @@ class AAT_CI_SO(object):
             H = magpy.Hamiltonian(shift_geom(mol, R, -R_disp))
             scf = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
             scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
+            print("Psi4 SCF = ", self.run_psi4_scf(H.molecule))
             scf.match_phase(scf0)
             ci = magpy.ciwfn_so(scf)
             ci.solve(e_conv, r_conv, maxiter, max_diis, start_diis)
@@ -288,4 +292,16 @@ class AAT_CI_SO(object):
             S[:,[b,j]] = S[:,[j,b]]
 
         return np.linalg.det(S[o,o])
+
+
+    def run_psi4_scf(self, molecule):
+        geom = molecule.create_psi4_string_from_molecule()
+        new_mol = psi4.geometry(geom)
+        new_mol.fix_orientation(True)
+        new_mol.fix_com(True)
+        new_mol.update_geometry()
+        print(new_mol.create_psi4_string_from_molecule())
+        print(new_mol.geometry().np)
+
+        return psi4.energy('SCF')
 

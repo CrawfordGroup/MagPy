@@ -16,7 +16,6 @@ class Hamiltonian(object):
     def __init__(self, molecule):
 
         self.molecule = molecule
-        print(molecule)
         self.basisset = psi4.core.BasisSet.build(molecule)
         mints = psi4.core.MintsHelper(self.basisset)
 

@@ -101,6 +101,8 @@ class hfwfn(object):
                 self.escf = escf
                 self.C = C
                 self.eps = eps
+                if print_level > 0:
+                    print("E(SCF) =  %20.15f" % (escf + self.enuc))
                 return (escf+self.enuc), C
 
         # Convergence failure
