@@ -16,6 +16,7 @@ class Hamiltonian(object):
     def __init__(self, molecule):
 
         self.molecule = molecule
+        print(molecule)
         self.basisset = psi4.core.BasisSet.build(molecule)
         mints = psi4.core.MintsHelper(self.basisset)
 
@@ -26,7 +27,7 @@ class Hamiltonian(object):
 
         # Save the true nuclear-electron attraction potential in case the
         # user adds external fields later
-        self.V0 = self.V 
+        self.V0 = self.V
 
 		# Nuclear repulsion energy (zero field)
         self.enuc = self.molecule.nuclear_repulsion_energy()

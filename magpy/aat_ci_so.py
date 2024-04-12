@@ -75,6 +75,9 @@ class AAT_CI_SO(object):
             if self.print_level > 0:
                 print("R(%d)+ Displacement" % (R))
             H = magpy.Hamiltonian(shift_geom(mol, R, R_disp))
+#            psi4.geometry(H.molecule)
+#            rhf_e = psi4.energy('SCF')
+#            print("Psi4 SCF = ", rhf_e)
             scf = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
             scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
             scf.match_phase(scf0)
@@ -92,6 +95,8 @@ class AAT_CI_SO(object):
             ci = magpy.ciwfn_so(scf)
             ci.solve(e_conv, r_conv, maxiter, max_diis, start_diis)
             R_neg.append(ci)
+
+        return
 
         # Compute full MO overlap matrix for all combinations of perturbed MOs
         S = [[[0 for k in range(4)] for j in range(3)] for i in range(3*mol.natom())] # list of overlap matrices
@@ -195,6 +200,8 @@ class AAT_CI_SO(object):
                                                 ci_R = ci_R_pos; ci_B = ci_B_pos; disp = 0
                                                 det = self.det_overlap([i, a+no, j, b+no], [k, c+no, l, d+no], S[R][B][disp], o)
                                                 pp += (1/16) * ci_R.C2[i,j,a,b] * ci_B.C2[k,l,c,d] * det
+
+#                                                print("<%2d %2d %2d %2d %1s%1s%1s%1s | %2d %2d %2d %2d %1s%1s%1s%1s>" % (i,a,j,b,k,c,l,d))
 
                                                 ci_R = ci_R_pos; ci_B = ci_B_neg; disp = 1
                                                 det = self.det_overlap([i, a+no, j, b+no], [k, c+no, l, d+no], S[R][B][disp], o)

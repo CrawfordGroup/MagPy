@@ -41,6 +41,8 @@ class AAT_CI(object):
             strength = np.zeros(3)
 
             # +B displacement
+            if self.print_level > 0:
+                print("B(%d)+ Displacement" % (B))
             H.reset_V()
             strength[B] = B_disp
             H.add_field(field='magnetic-dipole', strength=strength)
@@ -52,6 +54,8 @@ class AAT_CI(object):
             B_pos.append(ci)
 
             # -B displacement
+            if self.print_level > 0:
+                print("B(%d)- Displacement" % (B))
             H.reset_V()
             strength[B] = -B_disp
             H.add_field(field='magnetic-dipole', strength=strength)
@@ -70,7 +74,10 @@ class AAT_CI(object):
         for R in range(3*mol.natom()):
 
             # +R displacement
+            if self.print_level > 0:
+                print("R(%d)+ Displacement" % (R))
             H = magpy.Hamiltonian(shift_geom(mol, R, R_disp))
+            rhf_e, rhf_wfn = psi4.energy('SCF', return_wfn=True)
             scf = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
             scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
             scf.match_phase(scf0)
@@ -79,6 +86,8 @@ class AAT_CI(object):
             R_pos.append(ci)
 
             # -R displacement
+            if self.print_level > 0:
+                print("R(%d)- Displacement" % (R))
             H = magpy.Hamiltonian(shift_geom(mol, R, -R_disp))
             scf = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
             scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)

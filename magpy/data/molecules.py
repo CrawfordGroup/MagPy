@@ -16,6 +16,8 @@ H
 H 1 0.75
 H 2 1.5 1 90.0
 H 3 0.75 2 90.0 1 60.0
+no_com
+no_reorient
 symmetry c1
 """
 
