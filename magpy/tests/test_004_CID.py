@@ -77,7 +77,7 @@ def test_CID_H2O_CCPVDZ():
     escf, C = scf.solve_scf(e_conv, r_conv, maxiter)
 
     cid = magpy.ciwfn(scf)
-    eci, C2 = cid.solve_cid(e_conv, r_conv, maxiter, alg='PROJECTED')
+    eci, C2 = cid.solve_cid(e_conv, r_conv, maxiter)
 
     # Compae to CFOUR results
     c4scf = -75.98979581991861

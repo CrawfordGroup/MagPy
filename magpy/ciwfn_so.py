@@ -163,11 +163,6 @@ class ciwfn_so(object):
         r2 += 0.5 * contract('mnab,mnij->ijab', C2, ERI[o,o,o,o])
         r2 += 0.5 * contract('ijef,abef->ijab', C2, ERI[v,v,v,v])
 
-#        r2 += contract('imae,mbej->ijab', C2, ERI[o,v,v,o])
-#        r2 -= contract('imbe,maej->ijab', C2, ERI[o,v,v,o])
-#        r2 -= contract('jmae,mbei->ijab', C2, ERI[o,v,v,o])
-#        r2 += contract('jmbe,maei->ijab', C2, ERI[o,v,v,o])
-
         r2 += contract('mjeb,amie->ijab', C2, ERI[v,o,o,v])
         r2 -= contract('mieb,amje->ijab', C2, ERI[v,o,o,v])
         r2 -= contract('mjea,bmie->ijab', C2, ERI[v,o,o,v])
