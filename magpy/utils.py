@@ -30,7 +30,6 @@ def shift_geom(molecule, R, R_disp):
     this_mol.set_geometry(geom)
     this_mol.fix_orientation(True)
     this_mol.fix_com(True)
-    this_mol.update_geometry()
 
     return this_mol
 

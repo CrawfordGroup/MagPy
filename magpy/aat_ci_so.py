@@ -11,10 +11,18 @@ class AAT_CI_SO(object):
 
     def __init__(self, molecule, charge=0, spin=1, print_level=0):
 
+        # If the molecule uses Z-matrix input, convert it to Cartesian to retain the same frame
+        if molecule.has_zmatrix() == True:
+            geom = np.copy(molecule.geometry().np)
+            new_geom = ""
+            for i in range(molecule.natom()):
+                new_geom = new_geom + molecule.fsymbol(i) + " " + str(geom[i,0]) + " " + str(geom[i,1]) + " " + str(geom[i,2]) + "\n"
+            new_geom = new_geom + "units bohr\n" + "no_com\n" + "no_reorient\n" + "symmetry c1\n"
+            molecule = psi4.geometry(new_geom)
+
         # Ensure geometry remains fixed in space
         molecule.fix_orientation(True)
         molecule.fix_com(True)
-        molecule.update_geometry()
         self.molecule = molecule
 
         self.charge = charge
@@ -32,47 +40,45 @@ class AAT_CI_SO(object):
         # Compute the unperturbed HF wfn
         scf0 = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
         scf0.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
-        print(H.molecule.geometry().np)
         print("Psi4 SCF = ", self.run_psi4_scf(H.molecule))
         ci0 = magpy.ciwfn_so(scf0) # Not strictly necessary, but handy
 
         # Loop over magnetic field displacements and store wave functions (six total)
-#        B_pos = []
-#        B_neg = []
-#        for B in range(3):
-#            strength = np.zeros(3)
-#
-#            # +B displacement
-#            if self.print_level > 0:
-#                print("B(%d)+ Displacement" % (B))
-#            H.reset_V()
-#            strength[B] = B_disp
-#            H.add_field(field='magnetic-dipole', strength=strength)
-#            scf = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
-#            scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
-#            scf.match_phase(scf0)
-#            ci = magpy.ciwfn_so(scf)
-#            ci.solve(e_conv, r_conv, maxiter, max_diis, start_diis)
-#            B_pos.append(ci)
-#
-#            # -B displacement
-#            if self.print_level > 0:
-#                print("B(%d)- Displacement" % (B))
-#            H.reset_V()
-#            strength[B] = -B_disp
-#            H.add_field(field='magnetic-dipole', strength=strength)
-#            scf = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
-#            scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
-#            scf.match_phase(scf0)
-#            ci = magpy.ciwfn_so(scf)
-#            ci.solve(e_conv, r_conv, maxiter, max_diis, start_diis)
-#            B_neg.append(ci)
+        B_pos = []
+        B_neg = []
+        for B in range(3):
+            strength = np.zeros(3)
+
+            # +B displacement
+            if self.print_level > 0:
+                print("B(%d)+ Displacement" % (B))
+            H.reset_V()
+            strength[B] = B_disp
+            H.add_field(field='magnetic-dipole', strength=strength)
+            scf = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
+            scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
+            scf.match_phase(scf0)
+            ci = magpy.ciwfn_so(scf)
+            ci.solve(e_conv, r_conv, maxiter, max_diis, start_diis)
+            B_pos.append(ci)
+
+            # -B displacement
+            if self.print_level > 0:
+                print("B(%d)- Displacement" % (B))
+            H.reset_V()
+            strength[B] = -B_disp
+            H.add_field(field='magnetic-dipole', strength=strength)
+            scf = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
+            scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
+            scf.match_phase(scf0)
+            ci = magpy.ciwfn_so(scf)
+            ci.solve(e_conv, r_conv, maxiter, max_diis, start_diis)
+            B_neg.append(ci)
 
         # Loop over atomic coordinate displacements
         R_pos = []
         R_neg = []
-#        for R in range(3*mol.natom()):
-        for R in range(1):
+        for R in range(3*mol.natom()):
 
             # +R displacement
             if self.print_level > 0:
@@ -80,8 +86,6 @@ class AAT_CI_SO(object):
             H = magpy.Hamiltonian(shift_geom(mol, R, R_disp))
             scf = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
             scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
-            print(H.molecule.create_psi4_string_from_molecule())
-            print(H.molecule.geometry().np)
             print("Psi4 SCF = ", self.run_psi4_scf(H.molecule))
             scf.match_phase(scf0)
             ci = magpy.ciwfn_so(scf)
@@ -99,8 +103,6 @@ class AAT_CI_SO(object):
             ci = magpy.ciwfn_so(scf)
             ci.solve(e_conv, r_conv, maxiter, max_diis, start_diis)
             R_neg.append(ci)
-
-        return
 
         # Compute full MO overlap matrix for all combinations of perturbed MOs
         S = [[[0 for k in range(4)] for j in range(3)] for i in range(3*mol.natom())] # list of overlap matrices
@@ -300,8 +302,6 @@ class AAT_CI_SO(object):
         new_mol.fix_orientation(True)
         new_mol.fix_com(True)
         new_mol.update_geometry()
-        print(new_mol.create_psi4_string_from_molecule())
-        print(new_mol.geometry().np)
 
         return psi4.energy('SCF')
 
