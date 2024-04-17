@@ -11,18 +11,10 @@ class AAT_CI_SO(object):
 
     def __init__(self, molecule, charge=0, spin=1, print_level=0):
 
-        # If the molecule uses Z-matrix input, convert it to Cartesian to retain the same frame
-        if molecule.has_zmatrix() == True:
-            geom = np.copy(molecule.geometry().np)
-            new_geom = ""
-            for i in range(molecule.natom()):
-                new_geom = new_geom + molecule.fsymbol(i) + " " + str(geom[i,0]) + " " + str(geom[i,1]) + " " + str(geom[i,2]) + "\n"
-            new_geom = new_geom + "units bohr\n" + "no_com\n" + "no_reorient\n" + "symmetry c1\n"
-            molecule = psi4.geometry(new_geom)
-
         # Ensure geometry remains fixed in space
         molecule.fix_orientation(True)
         molecule.fix_com(True)
+        molecule.reinterpret_coordentry(False)
         self.molecule = molecule
 
         self.charge = charge
