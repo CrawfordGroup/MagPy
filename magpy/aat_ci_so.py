@@ -202,8 +202,8 @@ class AAT_CI_SO(object):
                                                 this = ci_R.C2[i,j,a,b] * ci_B.C2[k,l,c,d] * det
                                                 pp += (1/16) * ci_R.C2[i,j,a,b] * ci_B.C2[k,l,c,d] * det
 
-                                                if abs(this.imag) > 1e-12:
-                                                    print("%16.13f %1d %1d %1d %1d <%1s%1s%1s%1s | %1s%1s%1s%1s> %1d %1d %1d %1d" % (this.imag, i,a,j,b, s[i%2],s[a%2],s[j%2],s[b%2],s[k%2],s[c%2],s[l%2],s[d%2], k,c,l,d))
+#                                                if abs(this.imag) > 1e-12:
+#                                                    print("%16.13f %1d %1d %1d %1d <%1s%1s%1s%1s | %1s%1s%1s%1s> %1d %1d %1d %1d" % (this.imag, i,a,j,b, s[i%2],s[a%2],s[j%2],s[b%2],s[k%2],s[c%2],s[l%2],s[d%2], k,c,l,d))
 
                                                 ci_R = ci_R_pos; ci_B = ci_B_neg; disp = 1
                                                 det = self.det_overlap([i, a+no, j, b+no], [k, c+no, l, d+no], S[R][B][disp], o)

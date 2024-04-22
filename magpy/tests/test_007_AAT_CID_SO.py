@@ -33,11 +33,11 @@ def test_AAT_CID_H2DIMER():
     print(I_00)
     print("<0|D> Component\n")
     print(I_0D)
-    print("\n")
+    print("<D|0> Component\n")
     print(I_D0)
-    print("\n")
+    print("<0|D>+<D|0>\n")
     print(I_0D+I_D0)
-    print("\n")
+    print("<D|D> Component\n")
     print(I_DD)
 
 
