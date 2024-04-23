@@ -215,15 +215,16 @@ class AAT_CI(object):
                                             for d in range(nv):
 
                                                 ci_R = ci_R_pos; ci_B = ci_B_pos; disp = 0
-                                                det_AA_AA = det_overlap([i, a+no, j, b+no], 'AA', [k, c+no, l, d+no], 'AA', S[R][B][disp], o)
-                                                det_AB_AB = det_overlap([i, a+no, j, b+no], 'AB', [k, c+no, l, d+no], 'AB', S[R][B][disp], o)
-                                                det_AA_AB = det_overlap([i, a+no, j, b+no], 'AA', [k, c+no, l, d+no], 'AB', S[R][B][disp], o)
+#                                                det_AA_AA = det_overlap([i, a+no, j, b+no], 'AA', [k, c+no, l, d+no], 'AA', S[R][B][disp], o)
+#                                                det_AB_AB = det_overlap([i, a+no, j, b+no], 'AB', [k, c+no, l, d+no], 'AB', S[R][B][disp], o)
+#                                                det_AA_AB = det_overlap([i, a+no, j, b+no], 'AA', [k, c+no, l, d+no], 'AB', S[R][B][disp], o)
                                                 det_AB_AA = det_overlap([i, a+no, j, b+no], 'AB', [k, c+no, l, d+no], 'AA', S[R][B][disp], o)
-                                                pp += 0.25 * (ci_R.C2[i,j,a,b] - ci_R.C2[i,j,b,a]) * (ci_B.C2[k,l,c,d] - ci_B.C2[k,l,d,c]) *det_AA_AA
-                                                pp += 0.5 * (ci_R.C2[i,j,a,b] - ci_R.C2[i,j,b,a]) * ci_B.C2[k,l,c,d] *det_AA_AB
+#                                                pp += 0.25 * (ci_R.C2[i,j,a,b] - ci_R.C2[i,j,b,a]) * (ci_B.C2[k,l,c,d] - ci_B.C2[k,l,d,c]) *det_AA_AA
+#                                                pp += 0.5 * (ci_R.C2[i,j,a,b] - ci_R.C2[i,j,b,a]) * ci_B.C2[k,l,c,d] *det_AA_AB
                                                 pp += 0.5 * ci_R.C2[i,j,a,b] * (ci_B.C2[k,l,c,d] - ci_B.C2[k,l,d,c]) *det_AB_AA
-                                                pp += ci_R.C2[i,j,a,b] * ci_B.C2[k,l,c,d] *det_AB_AB
+#                                                pp += ci_R.C2[i,j,a,b] * ci_B.C2[k,l,c,d] *det_AB_AB
 
+                                                """
                                                 ci_R = ci_R_pos; ci_B = ci_B_neg; disp = 1
                                                 det_AA_AA = det_overlap([i, a+no, j, b+no], 'AA', [k, c+no, l, d+no], 'AA', S[R][B][disp], o)
                                                 det_AB_AB = det_overlap([i, a+no, j, b+no], 'AB', [k, c+no, l, d+no], 'AB', S[R][B][disp], o)
@@ -253,6 +254,7 @@ class AAT_CI(object):
                                                 mm += 0.5 * (ci_R.C2[i,j,a,b] - ci_R.C2[i,j,b,a]) * ci_B.C2[k,l,c,d] *det_AA_AB
                                                 mm += 0.5 * ci_R.C2[i,j,a,b] * (ci_B.C2[k,l,c,d] - ci_B.C2[k,l,d,c]) *det_AB_AA
                                                 mm += ci_R.C2[i,j,a,b] * ci_B.C2[k,l,c,d] *det_AB_AB
+                                                """
 
 
                 AAT_DD[R,B] = (((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
