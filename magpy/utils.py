@@ -2,6 +2,8 @@ import psi4
 import numpy as np
 from itertools import permutations
 from opt_einsum import contract
+import re
+from ast import literal_eval
 
 
 def shift_geom(molecule, R, R_disp):
@@ -196,4 +198,9 @@ class DIIS(object):
             C += c[i] * self.diis_C[i+1]
 
         return C
+
+def make_np_array(a):
+    a = re.sub(r"([^[])\s+([^]])", r"\1, \2", a)
+    a = np.array(literal_eval(a))
+    return a
 
