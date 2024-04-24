@@ -175,3 +175,9 @@ class ciwfn_so(object):
     def compute_cid_energy(self, o, v, ERI, t2):
         eci = 0.25 * contract('ijab,ijab->', t2, ERI[o,o,v,v])
         return eci
+
+    def normalize(self, o, v, C2):
+        N = 1.0 + contract('ijab,ijab->', C2.conj(), C2)
+        N = 1.0/np.sqrt(N)
+        C2 *= N
+        self.C0 = N
