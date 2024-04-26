@@ -29,14 +29,25 @@ def test_CID_SO_H2O_STO3G():
     maxiter = 100
     escf, C = scf.solve_scf(e_conv, r_conv, maxiter)
 
-    cid = magpy.ciwfn_so(scf)
-    eci, C2 = cid.solve(e_conv, r_conv, maxiter)
-
+    cid = magpy.ciwfn_so(scf, normalization='intermediate')
+    eci, C0, C2 = cid.solve(e_conv, r_conv, maxiter)
     c4scf = -74.94207992819220
     c4ci = -0.06865825074438
+    C0_ref = 1.0
     assert(abs(escf - c4scf) < 1e-11)
     assert(abs(eci - c4ci) < 1e-11)
+    assert(abs(C0 - C0_ref) < 1e-11)
 
+    cid = magpy.ciwfn_so(scf, normalization='full')
+    eci, C0, C2 = cid.solve(e_conv, r_conv, maxiter)
+    c4scf = -74.94207992819220
+    c4ci = -0.06865825074438
+    C0_ref = 0.9780847641534441
+    assert(abs(escf - c4scf) < 1e-11)
+    assert(abs(eci - c4ci) < 1e-11)
+    assert(abs(C0 - C0_ref) < 1e-11)
+
+    # Test frozen core
     psi4.set_options({'freeze_core': 'true'})
     H = magpy.Hamiltonian(mol)
     scf = magpy.hfwfn(H, 0, 1, 1)
@@ -45,13 +56,23 @@ def test_CID_SO_H2O_STO3G():
     maxiter = 100
     escf, C = scf.solve_scf(e_conv, r_conv, maxiter)
 
-    cid = magpy.ciwfn_so(scf)
-    eci, C2 = cid.solve(e_conv, r_conv, maxiter)
-
+    cid = magpy.ciwfn_so(scf, normalization='intermediate')
+    eci, C0, C2 = cid.solve(e_conv, r_conv, maxiter)
     c4scf = -74.94207992819220
     c4ci = -0.06859643905558
+    C0_ref = 1.0
     assert(abs(escf - c4scf) < 1e-11)
     assert(abs(eci - c4ci) < 1e-11)
+    assert(abs(C0 - C0_ref) < 1e-11)
+
+    cid = magpy.ciwfn_so(scf, normalization='full')
+    eci, C0, C2 = cid.solve(e_conv, r_conv, maxiter)
+    c4scf = -74.94207992819220
+    c4ci = -0.06859643905558
+    C0_ref = 0.9780778514625926
+    assert(abs(escf - c4scf) < 1e-11)
+    assert(abs(eci - c4ci) < 1e-11)
+    assert(abs(C0 - C0_ref) < 1e-11)
 
 
 def test_CID_SO_H2O_CCPVDZ():
@@ -76,14 +97,23 @@ def test_CID_SO_H2O_CCPVDZ():
     maxiter = 100
     escf, C = scf.solve_scf(e_conv, r_conv, maxiter)
 
-    cid = magpy.ciwfn_so(scf)
-    eci, C2 = cid.solve(e_conv, r_conv, maxiter)
-
-    # Compae to CFOUR results
+    cid = magpy.ciwfn_so(scf, normalization='intermediate')
+    eci, C0, C2 = cid.solve(e_conv, r_conv, maxiter)
     c4scf = -75.98979581991861
     c4ci = -0.21279410950205
+    C0_ref = 1.0
     assert(abs(escf - c4scf) < 1e-11)
     assert(abs(eci - c4ci) < 1e-11)
+    assert(abs(C0 - C0_ref) < 1e-11)
+
+    cid = magpy.ciwfn_so(scf, normalization='full')
+    eci, C0, C2 = cid.solve(e_conv, r_conv, maxiter)
+    c4scf = -75.98979581991861
+    c4ci = -0.21279410950205
+    C0_ref = 0.9712657483891116
+    assert(abs(escf - c4scf) < 1e-11)
+    assert(abs(eci - c4ci) < 1e-11)
+    assert(abs(C0 - C0_ref) < 1e-11)
 
     psi4.set_options({'freeze_core': 'true'})
     H = magpy.Hamiltonian(mol)
@@ -93,10 +123,20 @@ def test_CID_SO_H2O_CCPVDZ():
     maxiter = 100
     escf, C = scf.solve_scf(e_conv, r_conv, maxiter)
 
-    cid = magpy.ciwfn_so(scf)
-    eci, C2 = cid.solve(e_conv, r_conv, maxiter)
-
+    cid = magpy.ciwfn_so(scf, normalization='intermediate')
+    eci, C0, C2 = cid.solve(e_conv, r_conv, maxiter)
     c4scf = -75.98979581991861
     c4ci = -0.21098966441656
+    C0_ref = 1.0
     assert(abs(escf - c4scf) < 1e-11)
     assert(abs(eci - c4ci) < 1e-11)
+    assert(abs(C0 - C0_ref) < 1e-11)
+
+    cid = magpy.ciwfn_so(scf, normalization='full')
+    eci, C0, C2 = cid.solve(e_conv, r_conv, maxiter)
+    c4scf = -75.98979581991861
+    c4ci = -0.21098966441656
+    C0_ref = 0.9712377677176858
+    assert(abs(escf - c4scf) < 1e-11)
+    assert(abs(eci - c4ci) < 1e-11)
+    assert(abs(C0 - C0_ref) < 1e-11)

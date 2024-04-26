@@ -10,13 +10,19 @@ from .utils import DIIS
 
 class ciwfn(object):
 
-    def __init__(self, hfwfn):
+    def __init__(self, hfwfn, **kwargs):
 
         self.hfwfn = hfwfn
 
         self.print_level = hfwfn.print_level
 
         nfzc = hfwfn.H.basisset.n_frozen_core()
+
+        valid_normalizations = ['FULL', 'INTERMEDIATE']
+        normalization = kwargs.pop('normalization', 'FULL').upper()
+        if normalization not in valid_normalizations:
+            raise Exception(f"{normalization:s} is not an allowed choice of normalization.")
+        self.normalization = normalization
 
         nt = self.nt = hfwfn.nbf - nfzc # assumes number of MOs = number of AOs
         no = self.no = hfwfn.ndocc - nfzc
@@ -100,6 +106,7 @@ class ciwfn(object):
             print("\nSolving projected CID equations.")
 
         # initial guess amplitudes
+        C0 = 1.0
         C2 = ERI[o,o,v,v]/Dijab
 
         # initial CI energy (= MP2 energy)
@@ -135,7 +142,17 @@ class ciwfn(object):
                     print("\nCID Equations converged.")
                     print("CID Correlation Energy = ", eci)
                     print("CID Total Energy       = ", eci + E0)
-                return eci, C2
+
+                # Re-normalize if necessary
+                if self.normalization == 'FULL':
+                    C0, C2 = self.normalize(o, v, C2)
+                    norm = np.sqrt(C0*C0 + 2.0 * contract('ijab,ijab->', C2.conj(), C2) - contract('ijab,ijba', C2.conj(), C2))
+                    print(f"Normalization check = {norm:18.12f}")
+
+                self.C0 = C0
+                self.C2 = C2
+
+                return eci, C0, C2
 
             diis.add_error_vector(C2, r2/Dijab)
             if niter >= start_diis:
@@ -162,3 +179,7 @@ class ciwfn(object):
         eci = 1.0 * contract('ijab,ijab->', C2, L[o,o,v,v])
         return eci
 
+    def normalize(self, o, v, C2):
+        N = 1.0/np.sqrt(1.0 + contract('ijab,ijab->', (2*C2-C2.swapaxes(2,3)).conj(), C2))
+        C0 = N; C2 = N * C2
+        return C0, C2

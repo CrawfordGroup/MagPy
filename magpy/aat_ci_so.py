@@ -9,7 +9,7 @@ from .utils import *
 
 class AAT_CI_SO(object):
 
-    def __init__(self, molecule, charge=0, spin=1, print_level=0):
+    def __init__(self, molecule, charge=0, spin=1, print_level=0, normalization='full'):
 
         # Ensure geometry remains fixed in space
         molecule.fix_orientation(True)
@@ -20,6 +20,7 @@ class AAT_CI_SO(object):
         self.charge = charge
         self.spin = spin
         self.print_level = print_level
+        self.normalization = normalization
 
 
     def compute(self, R_disp, B_disp, e_conv=1e-10, r_conv=1e-10, maxiter=400, max_diis=8, start_diis=1):
@@ -33,7 +34,7 @@ class AAT_CI_SO(object):
         scf0 = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
         scf0.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
         print("Psi4 SCF = ", self.run_psi4_scf(H.molecule))
-        ci0 = magpy.ciwfn_so(scf0) # Not strictly necessary, but handy
+        ci0 = magpy.ciwfn_so(scf0, normalization=self.normalization) # Not strictly necessary, but handy
 
         # Loop over magnetic field displacements and store wave functions (six total)
         B_pos = []
@@ -50,7 +51,7 @@ class AAT_CI_SO(object):
             scf = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
             scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
             scf.match_phase(scf0)
-            ci = magpy.ciwfn_so(scf)
+            ci = magpy.ciwfn_so(scf, normalization=self.normalization)
             ci.solve(e_conv, r_conv, maxiter, max_diis, start_diis)
             B_pos.append(ci)
 
@@ -63,7 +64,7 @@ class AAT_CI_SO(object):
             scf = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
             scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
             scf.match_phase(scf0)
-            ci = magpy.ciwfn_so(scf)
+            ci = magpy.ciwfn_so(scf, normalization=self.normalization)
             ci.solve(e_conv, r_conv, maxiter, max_diis, start_diis)
             B_neg.append(ci)
 
@@ -80,7 +81,7 @@ class AAT_CI_SO(object):
             scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
             print("Psi4 SCF = ", self.run_psi4_scf(H.molecule))
             scf.match_phase(scf0)
-            ci = magpy.ciwfn_so(scf)
+            ci = magpy.ciwfn_so(scf, normalization=self.normalization)
             ci.solve(e_conv, r_conv, maxiter, max_diis, start_diis)
             R_pos.append(ci)
 
@@ -92,7 +93,7 @@ class AAT_CI_SO(object):
             scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
             print("Psi4 SCF = ", self.run_psi4_scf(H.molecule))
             scf.match_phase(scf0)
-            ci = magpy.ciwfn_so(scf)
+            ci = magpy.ciwfn_so(scf, normalization=self.normalization)
             ci.solve(e_conv, r_conv, maxiter, max_diis, start_diis)
             R_neg.append(ci)
 
@@ -122,12 +123,17 @@ class AAT_CI_SO(object):
         # <d0/dR|d0/dB>
         AAT_00 = np.zeros((3*mol.natom(), 3))
         for R in range(3*mol.natom()):
-            for B in range(3):
+            C0_R_pos = R_pos[R].C0
+            C0_R_neg = R_neg[R].C0
 
-                pp = self.det_overlap([0], [0], S[R][B][0], o)
-                pm = self.det_overlap([0], [0], S[R][B][1], o)
-                mp = self.det_overlap([0], [0], S[R][B][2], o)
-                mm = self.det_overlap([0], [0], S[R][B][3], o)
+            for B in range(3):
+                C0_B_pos = B_pos[B].C0
+                C0_B_neg = B_neg[B].C0
+
+                pp = self.det_overlap([0], [0], S[R][B][0], o) * C0_R_pos * C0_B_pos
+                pm = self.det_overlap([0], [0], S[R][B][1], o) * C0_R_pos * C0_B_neg
+                mp = self.det_overlap([0], [0], S[R][B][2], o) * C0_R_neg * C0_B_pos
+                mm = self.det_overlap([0], [0], S[R][B][3], o) * C0_R_neg * C0_B_neg
 
                 # Compute AAT element
                 AAT_00[R,B] = (((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
@@ -149,13 +155,13 @@ class AAT_CI_SO(object):
                             for b in range(nv):
 
                                 det = self.det_overlap([0], [i, a+no, j, b+no], S[R][B][0], o)
-                                pp += 0.25 * ci_B_pos.C2[i,j,a,b] * det
+                                pp += 0.25 * ci_B_pos.C2[i,j,a,b] * det * ci_R_pos.C0
                                 det = self.det_overlap([0], [i, a+no, j, b+no], S[R][B][1], o)
-                                pm += 0.25 * ci_B_neg.C2[i,j,a,b] * det
+                                pm += 0.25 * ci_B_neg.C2[i,j,a,b] * det * ci_R_pos.C0
                                 det = self.det_overlap([0], [i, a+no, j, b+no], S[R][B][2], o)
-                                mp += 0.25 * ci_B_pos.C2[i,j,a,b] * det
+                                mp += 0.25 * ci_B_pos.C2[i,j,a,b] * det * ci_R_neg.C0
                                 det = self.det_overlap([0], [i, a+no, j, b+no], S[R][B][3], o)
-                                mm += 0.25 * ci_B_neg.C2[i,j,a,b] * det
+                                mm += 0.25 * ci_B_neg.C2[i,j,a,b] * det * ci_R_neg.C0
 
                 AAT_0D[R,B] = (((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
 
@@ -166,13 +172,13 @@ class AAT_CI_SO(object):
                             for b in range(nv):
 
                                 det = self.det_overlap([i, a+no, j, b+no], [0], S[R][B][0], o)
-                                pp += 0.25 * ci_R_pos.C2[i,j,a,b] * det
+                                pp += 0.25 * ci_R_pos.C2[i,j,a,b] * det * ci_B_pos.C0
                                 det = self.det_overlap([i, a+no, j, b+no], [0], S[R][B][1], o)
-                                pm += 0.25 * ci_R_pos.C2[i,j,a,b] * det
+                                pm += 0.25 * ci_R_pos.C2[i,j,a,b] * det * ci_B_neg.C0
                                 det = self.det_overlap([i, a+no, j, b+no], [0], S[R][B][2], o)
-                                mp += 0.25 * ci_R_neg.C2[i,j,a,b] * det
+                                mp += 0.25 * ci_R_neg.C2[i,j,a,b] * det * ci_B_pos.C0
                                 det = self.det_overlap([i, a+no, j, b+no], [0], S[R][B][3], o)
-                                mm += 0.25 * ci_R_neg.C2[i,j,a,b] * det
+                                mm += 0.25 * ci_R_neg.C2[i,j,a,b] * det * ci_B_neg.C0
 
                 AAT_D0[R,B] = (((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
 

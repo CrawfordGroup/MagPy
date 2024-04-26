@@ -10,13 +10,19 @@ from .utils import DIIS
 
 class ciwfn_so(object):
 
-    def __init__(self, hfwfn):
+    def __init__(self, hfwfn, **kwargs):
 
         self.hfwfn = hfwfn
 
         self.print_level = hfwfn.print_level
 
         nfzc = hfwfn.H.basisset.n_frozen_core()
+
+        valid_normalizations = ['FULL', 'INTERMEDIATE']
+        normalization = kwargs.pop('normalization', 'FULL').upper()
+        if normalization not in valid_normalizations:
+            raise Exception(f"{normalization:s} is not an allowed choice of normalization.")
+        self.normalization = normalization
 
         ## Transform Hamiltonian to MO basis
 
@@ -81,8 +87,6 @@ class ciwfn_so(object):
 
         # Build MO-basis Fock matrix (diagonal for canonical MOs, but we don't assume that)
         F = self.F = self.h + contract('pmqm->pq', ERI[a,o,a,o])
-#        print(F)
-#        print(self.hfwfn.eps)
 
         # SCF check
         ESCF = contract('ii->',self.h[o,o]) + 0.5 * contract('ijij->', ERI[o,o,o,o])
@@ -112,7 +116,8 @@ class ciwfn_so(object):
         ERI = self.ERI
         Dijab = self.Dijab
 
-        # initial guess amplitudes
+        # initial guess amplitudes -- intermediate normalization
+        C0 = 1.0
         C2 = ERI[o,o,v,v]/Dijab
 
         # initial CI energy (= MP2 energy)
@@ -122,7 +127,6 @@ class ciwfn_so(object):
         diis = DIIS(C2, max_diis)
 
         if self.print_level > 0:
-            print(type(eci))
             print("CID Iter %3d: CID Ecorr = %.15f  dE = %.5E  MP2" % (0, eci, -eci))
 
         ediff = eci
@@ -132,7 +136,6 @@ class ciwfn_so(object):
 
             r2 = self.r_T2(o, v, eci, F, ERI, C2)
             C2 += r2/Dijab
-            self.C2 = C2
 
             rms = contract('ijab,ijab->', r2/Dijab, r2/Dijab)
             rms = np.sqrt(rms)
@@ -149,7 +152,16 @@ class ciwfn_so(object):
                     print("\nCID Equations converged.")
                     print("CID Correlation Energy = ", eci)
                     print("CID Total Energy       = ", eci + E0)
-                return eci, C2
+
+                # Re-normalize if necessary
+                if self.normalization == 'FULL':
+                    C0, C2 = self.normalize(o, v, C2)
+                    norm = np.sqrt(C0*C0 + (1/4) * contract('ijab,ijab', C2.conj(), C2))
+                    print(f"Normalization check = {norm:18.12f}")
+                self.C0 = C0
+                self.C2 = C2
+
+                return eci, C0, C2
 
             diis.add_error_vector(C2, r2/Dijab)
             if niter >= start_diis:
@@ -172,12 +184,11 @@ class ciwfn_so(object):
         return r2
 
 
-    def compute_cid_energy(self, o, v, ERI, t2):
-        eci = 0.25 * contract('ijab,ijab->', t2, ERI[o,o,v,v])
+    def compute_cid_energy(self, o, v, ERI, C2):
+        eci = (1/4) * contract('ijab,ijab->', C2, ERI[o,o,v,v])
         return eci
 
     def normalize(self, o, v, C2):
-        N = 1.0 + contract('ijab,ijab->', C2.conj(), C2)
-        N = 1.0/np.sqrt(N)
-        C2 *= N
-        self.C0 = N
+        N = 1.0/np.sqrt(1.0 + (1/4) * contract('ijab,ijab->', C2.conj(), C2))
+        C0 = N; C2 = N * C2
+        return C0, C2
