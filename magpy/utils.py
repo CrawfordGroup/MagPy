@@ -5,6 +5,58 @@ from opt_einsum import contract
 import re
 from ast import literal_eval
 
+def levi(indexes):
+    """
+    Compute the Levi-Civita tensor element for a given list of three indices
+
+    Parameters
+    ----------
+    indexes: List of three indices (numerical)
+
+    Returns
+    -------
+    integer: 0 (repeated indices), +1 (even permutation), -1 (odd permutation)
+
+    NB: I found this on a stackoverflow.com post from 3/25/2020
+    """
+    indexes = list(indexes)
+    if len(indexes) != len(set(indexes)):
+        return 0
+    elif indexes == sorted(indexes):
+        return 1
+    else:
+        for i in range(len(indexes)):
+            for j in range(len(indexes) - 1):
+                if indexes[i] > indexes[j + 1]:
+                    indexes[j], indexes[j + 1] = indexes[j + 1], indexes[j]
+                    return -1 * levi(indexes)
+
+def AAT_nuc(geom, Z):
+    """
+    Computes the nuclear contribution to the atomic axial tensor (AAT).
+
+    Parameters
+    ----------
+    geom: Nx3 numpy array of Cartesian coordinates (bohr) of all atoms
+    Z: Nx1 numpy array of atomic numbers of all atoms
+
+    Returns
+    -------
+    aat_nuc: N*3 x 3 array of nuclear contributions to AAT
+    """
+    natom = len(Z)
+
+    AAT = np.zeros((natom*3,3))
+    for M in range(natom):
+        for alpha in range(3): # atomic Cartesian coordinate
+            R = M*3 + alpha
+            for beta in range(3): # magnetic field coordinate
+                val = 0.0
+                for gamma in range(3): # atomic Cartesian coordinate
+                    AAT[R,beta] += (1/4) * levi([alpha, beta, gamma]) * geom[M, gamma] * Z[M]
+
+    return AAT
+
 
 def shift_geom(molecule, R, R_disp):
     """
@@ -158,6 +210,23 @@ class DIIS(object):
         return C
 
 def make_np_array(a):
+    """
+    Create a numpy array from the text output of calling print() of a numpy array
+
+    Parameters
+    ----------
+    a: A printed numpy array, e.g.:
+        [[0.53769593 0.89919323 0.4075488  0.36403768]
+         [0.72989146 0.2021274  0.97940316 0.68615811]
+         [0.90720974 0.13427956 0.4699694  0.92367386]
+         [0.31356426 0.75172354 0.78713203 0.45598685]]
+
+       Be sure to put the array in triple quotes (like this documentation) when passing it to the function.
+
+    Returns
+    -------
+    a: A numpy array.
+    """
     a = re.sub(r"([^[])\s+([^]])", r"\1, \2", a)
     a = np.array(literal_eval(a))
     return a
