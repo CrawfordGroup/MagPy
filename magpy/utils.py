@@ -231,3 +231,21 @@ def make_np_array(a):
     a = np.array(literal_eval(a))
     return a
 
+def findif(f, h, deriv=2, order=4):
+    """
+    Numerical differentiation.
+
+    Parameters
+    ----------
+    f: Function to differentiate
+    deriv: int = order of derivative
+    order: int = order of error in derivative relative to analytic
+
+    Return
+    ------
+    val: Value of derivative
+    """
+
+    val = f(h)
+
+
