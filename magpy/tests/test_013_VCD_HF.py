@@ -29,3 +29,28 @@ units bohr
             """)
 
     magpy.normal(mol)
+
+def test_VCD_H2O2_STO3G():
+
+    psi4.set_memory('2 GB')
+    psi4.set_output_file('output.dat', False)
+    psi4.set_options({'scf_type': 'pk',
+                      'e_convergence': 1e-13,
+                      'd_convergence': 1e-13,
+                      'r_convergence': 1e-13})
+
+    psi4.set_options({'basis': 'STO-3G'})
+    # HF/STO-3G Optimized geometry from CFOUR
+    mol = psi4.geometry("""
+H -1.838051419951917   1.472647809969243   0.806472638463773
+O -1.312852628446968  -0.129910361247786  -0.050815108044519
+O  1.312852628446968   0.129910361247786  -0.050815108044519
+H  1.838051419951917  -1.472647809969243   0.806472638463773
+no_com
+no_reorient
+symmetry c1
+units bohr
+            """)
+
+    magpy.normal(mol, True)
+
