@@ -25,8 +25,8 @@ noreorient
 no_com
 """)
 
-    geom, mass, elem, Z, uniq = mol.to_arrays()
-    AAT = AAT_nuc(geom, Z)
+    #geom, mass, elem, Z, uniq = mol.to_arrays()
+    AAT = AAT_nuc(mol)
     print(AAT)
     AAT_ref = np.array([ # Matches Dalton 
     [     0.00000000000000,    -0.19050858260000,    -2.63852838000000],
@@ -60,8 +60,8 @@ no_com
 units bohr
             """)
 
-    geom, mass, elem, Z, uniq = mol.to_arrays()
-    AAT = AAT_nuc(geom, Z)
+    #geom, mass, elem, Z, uniq = mol.to_arrays()
+    AAT = AAT_nuc(mol)
     print(AAT)
     AAT_ref = np.array([ # Matches Dalton
     [  0.00000000,     3.22387278,    -0.00000000],

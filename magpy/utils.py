@@ -31,19 +31,19 @@ def levi(indexes):
                     indexes[j], indexes[j + 1] = indexes[j + 1], indexes[j]
                     return -1 * levi(indexes)
 
-def AAT_nuc(geom, Z):
+def AAT_nuc(molecule):
     """
     Computes the nuclear contribution to the atomic axial tensor (AAT).
 
     Parameters
     ----------
-    geom: Nx3 numpy array of Cartesian coordinates (bohr) of all atoms
-    Z: Nx1 numpy array of atomic numbers of all atoms
+    molecule: Psi4 Molecule object
 
     Returns
     -------
     aat_nuc: N*3 x 3 array of nuclear contributions to AAT
     """
+    geom, mass, elem, Z, uniq = molecule.to_arrays()
     natom = len(Z)
 
     AAT = np.zeros((natom*3,3))
