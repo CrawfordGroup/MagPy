@@ -34,7 +34,8 @@ class AAT_CI(object):
         # Compute the unperturbed HF wfn
         scf0 = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
         scf0.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
-        print("Psi4 SCF = ", self.run_psi4_scf(H.molecule))
+        if self.print_level > 0:
+            print("Psi4 SCF = ", self.run_psi4_scf(H.molecule))
         ci0 = magpy.ciwfn(scf0, normalization=self.normalization) # Not strictly necessary, but handy
 
         # Loop over magnetic field displacements and store wave functions (six total)
@@ -81,7 +82,8 @@ class AAT_CI(object):
             rhf_e, rhf_wfn = psi4.energy('SCF', return_wfn=True)
             scf = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
             scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
-            print("Psi4 SCF = ", self.run_psi4_scf(H.molecule))
+            if self.print_level > 0:
+                print("Psi4 SCF = ", self.run_psi4_scf(H.molecule))
             scf.match_phase(scf0)
             ci = magpy.ciwfn(scf, normalization=self.normalization)
             ci.solve_cid(e_conv, r_conv, maxiter, max_diis, start_diis)
@@ -93,7 +95,8 @@ class AAT_CI(object):
             H = magpy.Hamiltonian(shift_geom(mol, R, -R_disp))
             scf = magpy.hfwfn(H, self.charge, self.spin, self.print_level)
             scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
-            print("Psi4 SCF = ", self.run_psi4_scf(H.molecule))
+            if self.print_level > 0:
+                print("Psi4 SCF = ", self.run_psi4_scf(H.molecule))
             scf.match_phase(scf0)
             ci = magpy.ciwfn(scf, normalization=self.normalization)
             ci.solve_cid(e_conv, r_conv, maxiter, max_diis, start_diis)

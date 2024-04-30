@@ -29,7 +29,7 @@ symmetry c1
 units bohr
             """)
 
-    magpy.normal(mol, 'HF', True, file="fcm_H2O2_HF_STO3G.txt")
+    magpy.normal(mol, 'CID', True, file="fcm_H2O2_HF_STO3G.txt")
 
 def test_VCD_H2O2_STO3G_KP():
 
@@ -53,6 +53,6 @@ symmetry c1
 units bohr
             """)
 
-    magpy.normal(mol, 'HF')
+    magpy.normal(mol, 'CID')
 
 

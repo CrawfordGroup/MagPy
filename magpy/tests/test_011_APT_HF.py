@@ -39,6 +39,7 @@ units bohr
     start_diis=1
     print_level=1
     dipder = apt.compute(R_disp, F_disp, e_conv, r_conv, maxiter, max_diis, start_diis, print_level)
+    print(dipder)
 
     # CFOUR HF/STO-3G analytic dipole derivatives
     dipder_ref = make_np_array("""

@@ -37,8 +37,6 @@ class APT(object):
             print("Initial geometry:")
             print(self.molecule.geometry().np)
 
-#        E0 = self.energy(0, 0, 0, 0, 0, 0, params)
-
         dipder = np.zeros((self.natom*3, 3))
         for R in range(self.natom*3):
             M = R//3; alpha = R%3 # atom and coordinate
@@ -100,7 +98,7 @@ class APT(object):
                 E_neg = eci + escf
 
             mu[beta] = -(E_pos - E_neg)/(2 * F_disp)
-        
+
         if print_level > 0:
             print("Dipole moment = ", mu)
 

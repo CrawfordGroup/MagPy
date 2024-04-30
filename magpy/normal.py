@@ -4,7 +4,7 @@ import numpy as np
 from .utils import AAT_nuc
 from opt_einsum import contract
 
-def normal(molecule, read_hessian=False, **kwargs):
+def normal(molecule, method='HF', read_hessian=False, **kwargs):
 
     # Physical constants and a few derived units
     _c = psi4.qcel.constants.get("speed of light in vacuum") # m/s
@@ -32,14 +32,14 @@ def normal(molecule, read_hessian=False, **kwargs):
 
     # Compute the Hessian [Eh/(a0^2)]
     if read_hessian is False:
-        hessian = magpy.Hessian(molecule, 0, 1, 'HF')
+        hessian = magpy.Hessian(molecule, 0, 1, method)
         disp = 0.001
         e_conv = 1e-13
         r_conv = 1e-13
         maxiter = 400
         max_diis = 8
         start_diis = 1
-        print_level = 1
+        print_level = 0
         H = hessian.compute(disp, e_conv, r_conv, maxiter, max_diis, start_diis, print_level)
     else:
         H = np.genfromtxt(kwargs.pop('file'), skip_header=1).reshape(3*molecule.natom(),3*molecule.natom())
@@ -61,7 +61,7 @@ def normal(molecule, read_hessian=False, **kwargs):
         print(f"{freq[i]*conv_freq_au2wavenumber:7.2f}")
 
     # Compute APTs and transform to normal mode basis
-    APT = magpy.APT(molecule, 0, 1, 'HF')
+    APT = magpy.APT(molecule, 0, 1, method)
     r_disp = 0.001
     f_disp = 0.0001
     e_conv = 1e-13
@@ -80,12 +80,17 @@ def normal(molecule, read_hessian=False, **kwargs):
         print(f"{freq[i]*conv_freq_au2wavenumber:7.2f} {ir_intensities[i]*conv_ir_au2kmmol:7.3f}")
 
     # Compute AATs and transform to normal mode basis
-    AAT = magpy.AAT_HF(molecule)
+    if method == 'HF':
+        AAT = magpy.AAT_HF(molecule)
+    elif method == 'CID':
+        AAT = magpy.AAT_CI(molecule)
     r_disp = 0.0001
     b_disp = 0.0001
-    I = AAT.compute(r_disp, b_disp) # electronic contribution
     J = AAT_nuc(molecule) # nuclear contribution
+    I = AAT.compute(r_disp, b_disp) # electronic contribution
     M = I + J   # 3N x 3
+    print(M.shape)
+    print(S.shape)
     M = M.T @ S # 3 x (3N-6)
 
     # Compute VCD rotatory strengths
@@ -93,6 +98,9 @@ def normal(molecule, read_hessian=False, **kwargs):
     for i in range(3*molecule.natom()-6):
         rotatory_strengths[i] = contract('j,j->', P[:,i], M[:,i])
 
+    print("\nFrequency   IR Intensity   Rotatory Strength")
+    print(" (cm-1)      (km/mol)    (esu**2 cm**2 10**44)")
+    print("----------------------------------------------")
     for i in range(3*molecule.natom()-6): # Assuming non-linear molecules for now
-        print(f"{freq[i]*conv_freq_au2wavenumber:7.2f} {ir_intensities[i]*conv_ir_au2kmmol:7.3f}  {rotatory_strengths[i] * conv_vcd_au2cgs:7.3f}")
+        print(f" {freq[i]*conv_freq_au2wavenumber:7.2f}     {ir_intensities[i]*conv_ir_au2kmmol:8.3f}        {rotatory_strengths[i] * conv_vcd_au2cgs:8.3f}")
 
