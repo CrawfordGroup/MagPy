@@ -52,5 +52,30 @@ symmetry c1
 units bohr
             """)
 
-    magpy.normal(mol, True)
+    magpy.normal(mol, True, file="fcm_H2O2_HF_STO3G.txt")
+
+def test_VCD_H2O2_STO3G_KP():
+
+    psi4.set_memory('2 GB')
+    psi4.set_output_file('output.dat', False)
+    psi4.set_options({'scf_type': 'pk',
+                      'e_convergence': 1e-13,
+                      'd_convergence': 1e-13,
+                      'r_convergence': 1e-13})
+
+    psi4.set_options({'basis': 'STO-3G'})
+    # HF/STO-3G Optimized geometry from CFOUR
+    mol = psi4.geometry("""
+O       0.0000000000        1.3192641900       -0.0952542913
+O      -0.0000000000       -1.3192641900       -0.0952542913
+H       1.6464858700        1.6841036400        0.7620343300
+H      -1.6464858700       -1.6841036400        0.7620343300
+no_com
+no_reorient
+symmetry c1
+units bohr
+            """)
+
+    magpy.normal(mol)
+
 

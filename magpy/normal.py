@@ -4,7 +4,7 @@ import numpy as np
 from .utils import AAT_nuc
 from opt_einsum import contract
 
-def normal(molecule, read_hessian=False):
+def normal(molecule, read_hessian=False, **kwargs):
 
     # Physical constants and a few derived units
     _c = psi4.qcel.constants.get("speed of light in vacuum") # m/s
@@ -42,7 +42,7 @@ def normal(molecule, read_hessian=False):
         print_level = 1
         H = hessian.compute(disp, e_conv, r_conv, maxiter, max_diis, start_diis, print_level)
     else:
-        H = np.genfromtxt("fcm", skip_header=1).reshape(3*molecule.natom(),3*molecule.natom())
+        H = np.genfromtxt(kwargs.pop('file'), skip_header=1).reshape(3*molecule.natom(),3*molecule.natom())
 
     # Mass-weight the Hessian (Eh/(a0^2 m_e))
     masses = np.array([(molecule.mass(i)*_u/_me) for i in range(molecule.natom())])
