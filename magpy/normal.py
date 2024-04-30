@@ -27,6 +27,8 @@ def normal(molecule, read_hessian=False):
     conv_freq_au2wavenumber = np.sqrt(_Eh/(_a0 * _a0 * _me)) * (1.0/(2.0 * np.pi * _c * 100.0))
     # IR intensities in au --> km/mol
     conv_ir_au2kmmol = (_e**2 * _ke * _na * np.pi)/(1000 * 3 * _me * _c**2)
+    # VCD rotatory strengths in au --> (esu cm)**2 * (10**(44))
+    conv_vcd_au2cgs = (_e**2 * _hbar * _a0)/(_me * _c) * (1000 * _c)**2 * (10**(44))
 
     # Compute the Hessian [Eh/(a0^2)]
     if read_hessian is False:
@@ -91,4 +93,6 @@ def normal(molecule, read_hessian=False):
     for i in range(3*molecule.natom()-6):
         rotatory_strengths[i] = contract('j,j->', P[:,i], M[:,i])
 
-    print(rotatory_strengths)
+    for i in range(3*molecule.natom()-6): # Assuming non-linear molecules for now
+        print(f"{freq[i]*conv_freq_au2wavenumber:7.2f} {ir_intensities[i]*conv_ir_au2kmmol:7.3f}  {rotatory_strengths[i] * conv_vcd_au2cgs:7.3f}")
+
