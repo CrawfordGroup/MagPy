@@ -86,9 +86,11 @@ def normal(molecule, method='HF', read_hessian=False, **kwargs):
         AAT = magpy.AAT_CI(molecule)
     r_disp = 0.0001
     b_disp = 0.0001
-    J = AAT_nuc(molecule) # nuclear contribution
     I = AAT.compute(r_disp, b_disp) # electronic contribution
+    J = AAT_nuc(molecule) # nuclear contribution
     M = I + J   # 3N x 3
+    print(I.shape)
+    print(J.shape)
     print(M.shape)
     print(S.shape)
     M = M.T @ S # 3 x (3N-6)
