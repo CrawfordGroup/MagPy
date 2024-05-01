@@ -80,19 +80,17 @@ def normal(molecule, method='HF', read_hessian=False, **kwargs):
         print(f"{freq[i]*conv_freq_au2wavenumber:7.2f} {ir_intensities[i]*conv_ir_au2kmmol:7.3f}")
 
     # Compute AATs and transform to normal mode basis
-    if method == 'HF':
-        AAT = magpy.AAT_HF(molecule)
-    elif method == 'CID':
-        AAT = magpy.AAT_CI(molecule)
     r_disp = 0.0001
     b_disp = 0.0001
-    I = AAT.compute(r_disp, b_disp) # electronic contribution
+    if method == 'HF':
+        AAT = magpy.AAT_HF(molecule)
+        I = AAT.compute(r_disp, b_disp) # electronic contribution
+    elif method == 'CID':
+        AAT = magpy.AAT_CI(molecule)
+        I_00, I_0D, I_D0, I_DD = AAT.compute(r_disp, b_disp) # electronic contribution
+        I = I_00 + I_DD
     J = AAT_nuc(molecule) # nuclear contribution
     M = I + J   # 3N x 3
-    print(I.shape)
-    print(J.shape)
-    print(M.shape)
-    print(S.shape)
     M = M.T @ S # 3 x (3N-6)
 
     # Compute VCD rotatory strengths

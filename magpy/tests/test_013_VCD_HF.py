@@ -7,6 +7,19 @@ import os
 
 np.set_printoptions(precision=10, linewidth=200, threshold=200, suppress=True)
 
+def test_VCD_H2Dimer_STO3G():
+
+    psi4.set_memory('2 GB')
+    psi4.set_output_file('output.dat', False)
+    psi4.set_options({'scf_type': 'pk',
+                      'e_convergence': 1e-13,
+                      'd_convergence': 1e-13,
+                      'r_convergence': 1e-13})
+
+    psi4.set_options({'basis': 'STO-3G'})
+    mol = psi4.geometry(moldict["(H2)_2"])
+    magpy.normal(mol, 'HF', True, file="fcm_H2dimer_HF_STO3G.txt")
+
 def test_VCD_H2O2_STO3G():
 
     psi4.set_memory('2 GB')

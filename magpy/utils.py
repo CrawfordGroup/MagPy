@@ -45,7 +45,6 @@ def AAT_nuc(molecule):
     """
     geom, mass, elem, Z, uniq = molecule.to_arrays()
     natom = len(Z)
-    print(f"natom from AAT_nuc = {natom:3d}")
 
     AAT = np.zeros((natom*3,3))
     for M in range(natom):
