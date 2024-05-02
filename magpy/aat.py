@@ -22,7 +22,7 @@ class AAT(object):
         self.spin = spin
 
 
-    def compute(self, method='HF', R_disp=0.001, B_disp=0.001, **kwargs):
+    def compute(self, method='HF', R_disp=0.0001, B_disp=0.0001, **kwargs):
 
         valid_methods = ['HF', 'CID']
         method = method.upper()
@@ -43,9 +43,9 @@ class AAT(object):
         self.orbitals = orbitals
 
         # Extract kwargs
-        e_conv = kwargs.pop('e_conv', 1e-7)
-        r_conv = kwargs.pop('r_conv', 1e-7)
-        maxiter = kwargs.pop('maxiter', 100)
+        e_conv = kwargs.pop('e_conv', 1e-13)
+        r_conv = kwargs.pop('r_conv', 1e-13)
+        maxiter = kwargs.pop('maxiter', 200)
         max_diis = kwargs.pop('max_diis', 8)
         start_diis = kwargs.pop('start_diis', 1)
         print_level = kwargs.pop('print_level', 0)
