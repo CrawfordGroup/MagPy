@@ -424,15 +424,7 @@ class AAT(object):
             if len(spins) == 4:
                 bra_spin = spins[0] + spins[1]
                 ket_spin = spins[2] + spins[3]
-            elif len(spins) == 2:
-                if len(bra_indices) == 1:
-                    ket_spin = spins[0] + spins[1]
-                elif len(ket_indices) == 1:
-                    bra_spin = spins[0] + spins[1]
-                else:
-                    raise Exception("For 0D or D) cases, only bra or ket indices must be provided.")
-            else:
-                raise Exception("spins must be of length 2 or 4: {len(spins):d}")
+
             if len(bra_indices) == 4: # double excitation
                 i = bra_indices[0]; a = bra_indices[1]
                 j = bra_indices[2]; b = bra_indices[3]
@@ -462,25 +454,26 @@ class AAT(object):
         no = ci_R_pos.no
         no = ci_R_pos.nv
 
+        pp = pm = mp = mm = 0.0
         if orbitals == 'SPATIAL'):
             for i in range(no):
                 for a in range(nv):
                     for j in range(no):
                         for b in range(nv):
-                            det_AA = self.det_overlap('0', [i, a+no, j, b+no], S[R][B][0], o, spins='AA')
-                            det_AB = self.det_overlap('0', [i, a+no, j, b+no], S[R][B][0], o, spins='AB')
+                            det_AA = self.det_overlap([0], [i, a+no, j, b+no], S[R][B][0], o, spins='AAAA')
+                            det_AB = self.det_overlap([0], [i, a+no, j, b+no], S[R][B][0], o, spins='ABAB')
                             pp += (0.5 * (ci_B_pos.C2[i,j,a,b] - ci_B_pos.C2[i,j,b,a]) * det_AA + ci_B_pos.C2[i,j,a,b] * det_AB) * ci_R_pos.C0
 
-                            det_AA = self.det_overlap('0', [i, a+no, j, b+no], S[R][B][1], o, spins='AA')
-                            det_AB = self.det_overlap('0', [i, a+no, j, b+no], S[R][B][1], o, spins='AB')
+                            det_AA = self.det_overlap([0], [i, a+no, j, b+no], S[R][B][1], o, spins='AAAA')
+                            det_AB = self.det_overlap([0], [i, a+no, j, b+no], S[R][B][1], o, spins='ABAB')
                             pm += (0.5 * (ci_B_neg.C2[i,j,a,b] - ci_B_neg.C2[i,j,b,a]) * det_AA + ci_B_neg.C2[i,j,a,b] * det_AB) * ci_R_pos.C0
 
-                            det_AA = self.det_overlap('0', [i, a+no, j, b+no], S[R][B][2], o, spins='AA')
-                            det_AB = self.det_overlap('0', [i, a+no, j, b+no], S[R][B][2], o, spins='AB')
+                            det_AA = self.det_overlap([0], [i, a+no, j, b+no], S[R][B][2], o, spins='AAAA')
+                            det_AB = self.det_overlap([0], [i, a+no, j, b+no], S[R][B][2], o, spins='ABAB')
                             mp += (0.5 * (ci_B_pos.C2[i,j,a,b] - ci_B_pos.C2[i,j,b,a]) * det_AA + ci_B_pos.C2[i,j,a,b] * det_AB) * ci_R_neg.C0
 
-                            det_AA = self.det_overlap('0', [i, a+no, j, b+no], S[R][B][3], o, spins='AA')
-                            det_AB = self.det_overlap('0', [i, a+no, j, b+no], S[R][B][3], o, spins='AB')
+                            det_AA = self.det_overlap([0], [i, a+no, j, b+no], S[R][B][3], o, spins='AAAA')
+                            det_AB = self.det_overlap([0], [i, a+no, j, b+no], S[R][B][3], o, spins='ABAB')
                             mm += (0.5 * (ci_B_neg.C2[i,j,a,b] - ci_B_neg.C2[i,j,b,a]) * det_AA + ci_B_neg.C2[i,j,a,b] * det_AB) * ci_R_neg.C0
 
         elif orbitals == 'SPIN'):
@@ -488,14 +481,16 @@ class AAT(object):
                 for a in range(0, nv, 1):
                     for j in range(0, no, 1):
                         for b in range(0, nv, 1):
-                            det = self.det_overlap('0', [i, a+no, j, b+no], S[R][B][0], o)
+                            det = self.det_overlap([0], [i, a+no, j, b+no], S[R][B][0], o)
                             pp += 0.25 * ci_B_pos.C2[i,j,a,b] * det * ci_R_pos.C0
-                            det = self.det_overlap('0', [i, a+no, j, b+no], S[R][B][1], o)
+                            det = self.det_overlap([0], [i, a+no, j, b+no], S[R][B][1], o)
                             pm += 0.25 * ci_B_neg.C2[i,j,a,b] * det * ci_R_pos.C0
-                            det = self.det_overlap('0', [i, a+no, j, b+no], S[R][B][2], o)
+                            det = self.det_overlap([0], [i, a+no, j, b+no], S[R][B][2], o)
                             mp += 0.25 * ci_B_pos.C2[i,j,a,b] * det * ci_R_neg.C0
-                            det = self.det_overlap('0', [i, a+no, j, b+no], S[R][B][3], o)
+                            det = self.det_overlap([0], [i, a+no, j, b+no], S[R][B][3], o)
                             mm += 0.25 * ci_B_neg.C2[i,j,a,b] * det * ci_R_neg.C0
+
+        return pp, pm, mp, mm
 
 
     def run_psi4_scf(self, molecule):
