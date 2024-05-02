@@ -302,6 +302,9 @@ class AAT_CI(object):
             if bra_spin == 'AA':
                 S_alpha[[a,i],:] = S_alpha[[i,a],:]
                 S_alpha[[b,j],:] = S_alpha[[j,b],:]
+            elif bra_spin == 'BB':
+                S_beta[[a,i],:] = S_beta[[i,a],:]
+                beta[[b,j],:] = S_beta[[j,b],:]
             elif bra_spin == 'AB':
                 S_alpha[[a,i],:] = S_alpha[[i,a],:]
                 S_beta[[b,j],:] = S_beta[[j,b],:]
@@ -312,6 +315,9 @@ class AAT_CI(object):
             if ket_spin == 'AA':
                 S_alpha[:,[a,i]] = S_alpha[:,[i,a]]
                 S_alpha[:,[b,j]] = S_alpha[:,[j,b]]
+            if ket_spin == 'BB':
+                S_beta[:,[a,i]] = S_beta[:,[i,a]]
+                S_beta[:,[b,j]] = S_beta[:,[j,b]]
             elif ket_spin == 'AB':
                 S_alpha[:,[a,i]] = S_alpha[:,[i,a]]
                 S_beta[:,[b,j]] = S_beta[:,[j,b]]
