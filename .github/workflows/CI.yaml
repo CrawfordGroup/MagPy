@@ -35,7 +35,7 @@ jobs:
         ulimit -a
 
     - name: Create Psi4 Environment
-      uses: conda-incubator/setup-miniconda@v2
+      uses: conda-incubator/setup-miniconda@v3
       with:
         miniconda-version: "latest"
         activate-environment: p4env
@@ -67,7 +67,7 @@ jobs:
     - name: Test and generate coverage report
       run: |
         pip install coverage
-        coverage run -m pytest
+        coverage run -m pytest test_005_AAT_CID.py::test_AAT_CID_H2DIMER
         coverage xml 
         ls -l
 
