@@ -3,7 +3,7 @@ import magpy
 import numpy as np
 from opt_einsum import contract
 
-def normal(molecule, method='HF', r_disp=0.001, f_disp=0.0001, b_disp=0.0001, read_hessian=False, **kwargs):
+def normal(molecule, method='HF', r_disp=0.001, f_disp=0.0001, b_disp=0.0001, **kwargs):
 
     valid_methods = ['HF', 'CID']
     method = method.upper()
@@ -17,6 +17,9 @@ def normal(molecule, method='HF', r_disp=0.001, f_disp=0.0001, b_disp=0.0001, re
     max_diis = kwargs.pop('max_diis', 8)
     start_diis = kwargs.pop('start_diis', 1)
     print_level = kwargs.pop('print_level', 0)
+    read_hessian = kwargs.pop('read_hessian', False)
+    if read_hessian == True:
+        fcm_file = kwargs.pop('fcm_file', 'fcm')
 
     # Physical constants and a few derived units
     _c = psi4.qcel.constants.get("speed of light in vacuum") # m/s
@@ -47,7 +50,8 @@ def normal(molecule, method='HF', r_disp=0.001, f_disp=0.0001, b_disp=0.0001, re
         hessian = magpy.Hessian(molecule)
         H = hessian.compute(method, r_disp, e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
     else:
-        H = np.genfromtxt(kwargs.pop('file'), skip_header=1).reshape(3*molecule.natom(),3*molecule.natom())
+        print("Using provided hessian...")
+        H = np.genfromtxt(fcm_file, skip_header=1).reshape(3*molecule.natom(),3*molecule.natom())
 
     # Mass-weight the Hessian (Eh/(a0^2 m_e))
     masses = np.array([(molecule.mass(i)*_u/_me) for i in range(molecule.natom())])
@@ -62,8 +66,8 @@ def normal(molecule, method='HF', r_disp=0.001, f_disp=0.0001, b_disp=0.0001, re
     S = np.flip(Lx, 1)[:,:(3*molecule.natom()-6)] 
     freq = np.flip(np.sqrt(w))[:(3*molecule.natom()-6)]
 
-    for i in range(3*molecule.natom()-6): # Assuming non-linear molecules for now
-        print(f"{freq[i]*conv_freq_au2wavenumber:7.2f}")
+    #for i in range(3*molecule.natom()-6): # Assuming non-linear molecules for now
+    #    print(f"{freq[i]*conv_freq_au2wavenumber:7.2f}")
 
     # Compute APTs and transform to normal mode basis
     APT = magpy.APT(molecule)
@@ -76,8 +80,8 @@ def normal(molecule, method='HF', r_disp=0.001, f_disp=0.0001, b_disp=0.0001, re
     for i in range(3*molecule.natom()-6):
         ir_intensities[i] = contract('j,j->', P[:,i], P[:,i])
 
-    for i in range(3*molecule.natom()-6): # Assuming non-linear molecules for now
-        print(f"{freq[i]*conv_freq_au2wavenumber:7.2f} {ir_intensities[i]*conv_ir_au2kmmol:7.3f}")
+    #for i in range(3*molecule.natom()-6): # Assuming non-linear molecules for now
+    #    print(f"{freq[i]*conv_freq_au2wavenumber:7.2f} {ir_intensities[i]*conv_ir_au2kmmol:7.3f}")
 
     # Compute AATs and transform to normal mode basis
     r_disp = 0.0001 # need smaller displacement for AAT
@@ -100,5 +104,7 @@ def normal(molecule, method='HF', r_disp=0.001, f_disp=0.0001, b_disp=0.0001, re
     print(" (cm-1)      (km/mol)    (esu**2 cm**2 10**44)")
     print("----------------------------------------------")
     for i in range(3*molecule.natom()-6): # Assuming non-linear molecules for now
-        print(f" {freq[i]*conv_freq_au2wavenumber:7.2f}     {ir_intensities[i]*conv_ir_au2kmmol:8.3f}        {rotatory_strengths[i] * conv_vcd_au2cgs:8.3f}")
+        print(f" {freq[i]*conv_freq_au2wavenumber:7.2f}     {ir_intensities[i]*conv_ir_au2kmmol:8.3f}        {rotatory_strengths[i]*conv_vcd_au2cgs:8.3f}")
+
+    return freq*conv_freq_au2wavenumber, ir_intensities*conv_ir_au2kmmol, rotatory_strengths*conv_vcd_au2cgs
 
