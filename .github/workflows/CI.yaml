@@ -67,7 +67,7 @@ jobs:
     - name: Test and generate coverage report
       run: |
         pip install coverage
-        coverage run -m pytest magpy/tests/test_005_AAT_CID.py::test_AAT_CID_H2O
+        coverage run -m pytest
         coverage xml 
         ls -l
 
