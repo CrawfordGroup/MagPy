@@ -8,13 +8,7 @@ from .utils import shift_geom
 
 class Hessian(object):
 
-    def __init__(self, molecule, charge=0, spin=1, method='HF'):
-
-        valid_methods = ['HF', 'CID']
-        method = method.upper()
-        if method not in valid_methods:
-            raise Exception(f"{method:s} is not an allowed choice of method.")
-        self.method = method
+    def __init__(self, molecule, charge=0, spin=1):
 
         # Ensure geometry remains fixed in space
         molecule.fix_orientation(True)
@@ -29,7 +23,21 @@ class Hessian(object):
         self.natom = self.geom.shape[0]
 
 
-    def compute(self, disp=0.001, e_conv=1e-10, r_conv=1e-10, maxiter=400, max_diis=8, start_diis=1, print_level=0):
+    def compute(self, method='HF', disp=0.001, **kwargs):
+
+        valid_methods = ['HF', 'CID']
+        method = method.upper()
+        if method not in valid_methods:
+            raise Exception(f"{method:s} is not an allowed choice of method.")
+        self.method = method
+
+        # Extract kwargs
+        e_conv = kwargs.pop('e_conv', 1e-10)
+        r_conv = kwargs.pop('r_conv', 1e-10)
+        maxiter = kwargs.pop('maxiter', 400)
+        max_diis = kwargs.pop('max_diis', 8)
+        start_diis = kwargs.pop('start_diis', 1)
+        print_level = kwargs.pop('print_level', 0)
 
         params = [e_conv, r_conv, maxiter, max_diis, start_diis, print_level]
 
@@ -78,8 +86,8 @@ class Hessian(object):
         print_level = params[5]
 
         H = magpy.Hamiltonian(shift_geom(shift_geom(self.molecule, M1*3+alpha1, disp1), M2*3+alpha2, disp2))
-        scf = magpy.hfwfn(H, self.charge, self.spin, print_level)
-        escf, C = scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
+        scf = magpy.hfwfn(H, self.charge, self.spin)
+        escf, C = scf.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
         if print_level > 0:
             print(f"{M1:d}, {alpha1:d}; {M2:d}, {alpha2:d} ::: {disp1:0.5f}; {disp2:0.5f}")
             print(H.molecule.geometry().np)
@@ -89,5 +97,5 @@ class Hessian(object):
             return escf
         elif self.method == 'CID':
             ci = magpy.ciwfn(scf)
-            eci, C0, C2 = ci.solve_cid(e_conv, r_conv, maxiter, max_diis, start_diis)
+            eci, C0, C2 = ci.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
             return eci + escf

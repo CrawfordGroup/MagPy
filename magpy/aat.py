@@ -184,8 +184,10 @@ class AAT(object):
                 S[R][B][3] = self.mo_overlap(R_neg_C, R_neg_H, B_neg_C, B_neg_H)
 
         # Compute AAT components using finite-difference
-        o = slice(0,ci0.no)
-        if method == 'CID':
+        if method == 'HF':
+            o = slice(0,scf0.ndocc)
+        elif method == 'CID':
+            o = slice(0,ci0.no)
             no = ci0.no
             nv = ci0.nv
 
@@ -543,6 +545,33 @@ class AAT(object):
                                             mm += (1/16) * ci_R.C2[i,j,a,b] * ci_B.C2[k,l,c,d] * det
 
         return pp, pm, mp, mm
+
+    def nuclear(self):
+        """
+        Computes the nuclear contribution to the atomic axial tensor (AAT).
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        aat_nuc: N*3 x 3 array of nuclear contributions to AAT
+        """
+
+        geom, mass, elem, Z, uniq = self.molecule.to_arrays()
+        natom = self.molecule.natom()
+
+        AAT = np.zeros((natom*3,3))
+        for M in range(natom):
+            for alpha in range(3): # atomic Cartesian coordinate
+                R = M*3 + alpha
+                for beta in range(3): # magnetic field coordinate
+                    val = 0.0
+                    for gamma in range(3): # atomic Cartesian coordinate
+                        AAT[R,beta] += (1/4) * levi([alpha, beta, gamma]) * geom[M, gamma] * Z[M]
+
+        return AAT
 
 
     def run_psi4_scf(self, molecule):

@@ -1,10 +1,22 @@
 import psi4
 import magpy
 import numpy as np
-from .utils import AAT_nuc
 from opt_einsum import contract
 
-def normal(molecule, method='HF', read_hessian=False, **kwargs):
+def normal(molecule, method='HF', r_disp=0.001, f_disp=0.0001, b_disp=0.0001, read_hessian=False, **kwargs):
+
+    valid_methods = ['HF', 'CID']
+    method = method.upper()
+    if method not in valid_methods:
+        raise Exception(f"{method:s} is not an allowed choice of method.")
+
+    # Extract kwargs
+    e_conv = kwargs.pop('e_conv', 1e-13)
+    r_conv = kwargs.pop('r_conv', 1e-13)
+    maxiter = kwargs.pop('maxiter', 400)
+    max_diis = kwargs.pop('max_diis', 8)
+    start_diis = kwargs.pop('start_diis', 1)
+    print_level = kwargs.pop('print_level', 0)
 
     # Physical constants and a few derived units
     _c = psi4.qcel.constants.get("speed of light in vacuum") # m/s
@@ -32,15 +44,8 @@ def normal(molecule, method='HF', read_hessian=False, **kwargs):
 
     # Compute the Hessian [Eh/(a0^2)]
     if read_hessian is False:
-        hessian = magpy.Hessian(molecule, 0, 1, method)
-        disp = 0.001
-        e_conv = 1e-13
-        r_conv = 1e-13
-        maxiter = 400
-        max_diis = 8
-        start_diis = 1
-        print_level = 0
-        H = hessian.compute(disp, e_conv, r_conv, maxiter, max_diis, start_diis, print_level)
+        hessian = magpy.Hessian(molecule)
+        H = hessian.compute(method, r_disp, e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
     else:
         H = np.genfromtxt(kwargs.pop('file'), skip_header=1).reshape(3*molecule.natom(),3*molecule.natom())
 
@@ -61,13 +66,8 @@ def normal(molecule, method='HF', read_hessian=False, **kwargs):
         print(f"{freq[i]*conv_freq_au2wavenumber:7.2f}")
 
     # Compute APTs and transform to normal mode basis
-    APT = magpy.APT(molecule, 0, 1, method)
-    r_disp = 0.001
-    f_disp = 0.0001
-    e_conv = 1e-13
-    r_conv = 1e-13
-    maxiter = 400
-    P = APT.compute(r_disp, f_disp, e_conv, r_conv, maxiter) # 3N x 3
+    APT = magpy.APT(molecule)
+    P = APT.compute(method, r_disp, f_disp, e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
     # (e a0)/(a0 sqrt(m_e))
     P = P.T @ S # 3 x (3N-6)
 
@@ -80,16 +80,14 @@ def normal(molecule, method='HF', read_hessian=False, **kwargs):
         print(f"{freq[i]*conv_freq_au2wavenumber:7.2f} {ir_intensities[i]*conv_ir_au2kmmol:7.3f}")
 
     # Compute AATs and transform to normal mode basis
-    r_disp = 0.0001
-    b_disp = 0.0001
+    r_disp = 0.0001 # need smaller displacement for AAT
+    AAT = magpy.AAT(molecule)
     if method == 'HF':
-        AAT = magpy.AAT_HF(molecule)
-        I = AAT.compute(r_disp, b_disp) # electronic contribution
+        I = AAT.compute('HF', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
     elif method == 'CID':
-        AAT = magpy.AAT_CI(molecule)
-        I_00, I_0D, I_D0, I_DD = AAT.compute(r_disp, b_disp) # electronic contribution
+        I_00, I_0D, I_D0, I_DD = AAT.compute('CID', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
         I = I_00 + I_DD
-    J = AAT_nuc(molecule) # nuclear contribution
+    J = AAT.nuclear() # nuclear contribution
     M = I + J   # 3N x 3
     M = M.T @ S # 3 x (3N-6)
 

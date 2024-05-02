@@ -165,7 +165,8 @@ class ciwfn_so(object):
                 if self.normalization == 'FULL':
                     C0, C2 = self.normalize(o, v, C2)
                     norm = np.sqrt(C0*C0 + (1/4) * contract('ijab,ijab', C2.conj(), C2))
-                    print(f"Normalization check = {norm:18.12f}")
+                    if print_level > 0:
+                        print(f"Normalization check = {norm:18.12f}")
                 self.C0 = C0
                 self.C2 = C2
 

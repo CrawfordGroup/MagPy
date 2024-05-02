@@ -31,33 +31,6 @@ def levi(indexes):
                     indexes[j], indexes[j + 1] = indexes[j + 1], indexes[j]
                     return -1 * levi(indexes)
 
-def AAT_nuc(molecule):
-    """
-    Computes the nuclear contribution to the atomic axial tensor (AAT).
-
-    Parameters
-    ----------
-    molecule: Psi4 Molecule object
-
-    Returns
-    -------
-    aat_nuc: N*3 x 3 array of nuclear contributions to AAT
-    """
-    geom, mass, elem, Z, uniq = molecule.to_arrays()
-    natom = len(Z)
-
-    AAT = np.zeros((natom*3,3))
-    for M in range(natom):
-        for alpha in range(3): # atomic Cartesian coordinate
-            R = M*3 + alpha
-            for beta in range(3): # magnetic field coordinate
-                val = 0.0
-                for gamma in range(3): # atomic Cartesian coordinate
-                    AAT[R,beta] += (1/4) * levi([alpha, beta, gamma]) * geom[M, gamma] * Z[M]
-
-    return AAT
-
-
 def shift_geom(molecule, R, R_disp):
     """
     Shift the R-th Cartesian coordinate of the given molecule geometry by

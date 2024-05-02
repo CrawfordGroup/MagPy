@@ -4,7 +4,6 @@ import pytest
 from ..data.molecules import *
 import numpy as np
 import os
-from ..utils import AAT_nuc
 
 np.set_printoptions(precision=15, linewidth=200, threshold=200, suppress=True)
 
@@ -25,9 +24,10 @@ noreorient
 no_com
 """)
 
-    #geom, mass, elem, Z, uniq = mol.to_arrays()
-    AAT = AAT_nuc(mol)
-    print(AAT)
+    AAT = magpy.AAT(mol)
+    I_nuc = AAT.nuclear()
+    print(I_nuc)
+
     AAT_ref = np.array([ # Matches Dalton 
     [     0.00000000000000,    -0.19050858260000,    -2.63852838000000],
     [     0.19050858260000,     0.00000000000000,     0.00000000000000],
@@ -43,7 +43,7 @@ no_com
     [    -0.42102591000000,     0.41162146750000,     0.00000000000000],
     ])
 
-    assert(np.max(np.abs(AAT-AAT_ref)) < 1e-11)
+    assert(np.max(np.abs(I_nuc-AAT_ref)) < 1e-11)
 
     ## Ethylene Oxide
     mol = psi4.geometry("""
@@ -60,9 +60,10 @@ no_com
 units bohr
             """)
 
-    #geom, mass, elem, Z, uniq = mol.to_arrays()
-    AAT = AAT_nuc(mol)
-    print(AAT)
+    AAT = magpy.AAT(mol)
+    I_nuc = AAT.nuclear()
+    print(I_nuc)
+
     AAT_ref = np.array([ # Matches Dalton
     [  0.00000000,     3.22387278,    -0.00000000],
     [ -3.22387278,     0.00000000,     0.00000000],
@@ -87,4 +88,4 @@ units bohr
     [  0.59486586,     0.43724415,     0.00000000],
     ])
 
-    assert(np.max(np.abs(AAT-AAT_ref)) < 1e-8)
+    assert(np.max(np.abs(I_nuc-AAT_ref)) < 1e-8)

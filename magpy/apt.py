@@ -8,13 +8,7 @@ from .utils import shift_geom
 
 class APT(object):
 
-    def __init__(self, molecule, charge=0, spin=1, method='HF'):
-
-        valid_methods = ['HF', 'CID']
-        method = method.upper()
-        if method not in valid_methods:
-            raise Exception(f"{method:s} is not an allowed choice of method.")
-        self.method = method
+    def __init__(self, molecule, charge=0, spin=1):
 
         # Ensure geometry remains fixed in space
         molecule.fix_orientation(True)
@@ -29,7 +23,21 @@ class APT(object):
         self.natom = self.geom.shape[0]
 
 
-    def compute(self, R_disp=0.001, F_disp=0.0001, e_conv=1e-10, r_conv=1e-10, maxiter=400, max_diis=8, start_diis=1, print_level=0):
+    def compute(self, method='HF', R_disp=0.001, F_disp=0.0001, **kwargs):
+
+        valid_methods = ['HF', 'CID']
+        method = method.upper()
+        if method not in valid_methods:
+            raise Exception(f"{method:s} is not an allowed choice of method.")
+        self.method = method
+
+        # Extract kwargs
+        e_conv = kwargs.pop('e_conv', 1e-10)
+        r_conv = kwargs.pop('r_conv', 1e-10)
+        maxiter = kwargs.pop('maxiter', 400)
+        max_diis = kwargs.pop('max_diis', 8)
+        start_diis = kwargs.pop('start_diis', 1)
+        print_level = kwargs.pop('print_level', 0)
 
         params = [e_conv, r_conv, maxiter, max_diis, start_diis, print_level]
 
@@ -64,37 +72,31 @@ class APT(object):
         start_diis = params[4]
         print_level = params[5]
 
-
         mu = np.zeros((3))
         strength = np.eye(3) * F_disp
         for beta in range(3):
             H = magpy.Hamiltonian(shift_geom(self.molecule, M*3+alpha, R_disp))
             H.add_field(field='electric-dipole', strength=strength[beta])
-            scf = magpy.hfwfn(H, self.charge, self.spin, print_level)
-            escf, C = scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
-
-#            if print_level > 0:
-#                print(f"{M:d}, {alpha:d}, {beta:d} ::: {R_disp:0.5f}; {F_disp:0.5f}")
-#                print(H.molecule.geometry().np)
-#                print(f"ESCF = {escf:18.15f}")
+            scf = magpy.hfwfn(H, self.charge, self.spin)
+            escf, C = scf.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
 
             if self.method == 'HF':
                 E_pos = escf
             elif self.method == 'CID':
                 ci = magpy.ciwfn(scf)
-                eci, C0, C2 = ci.solve_cid(e_conv, r_conv, maxiter, max_diis, start_diis)
+                eci, C0, C2 = ci.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
                 E_pos = eci + escf
 
             H = magpy.Hamiltonian(shift_geom(self.molecule, M*3+alpha, R_disp))
             H.add_field(field='electric-dipole', strength=-1.0*strength[beta])
-            scf = magpy.hfwfn(H, self.charge, self.spin, print_level)
-            escf, C = scf.solve_scf(e_conv, r_conv, maxiter, max_diis, start_diis)
+            scf = magpy.hfwfn(H, self.charge, self.spin)
+            escf, C = scf.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
 
             if self.method == 'HF':
                 E_neg = escf
             elif self.method == 'CID':
                 ci = magpy.ciwfn(scf)
-                eci, C0, C2 = ci.solve_cid(e_conv, r_conv, maxiter, max_diis, start_diis)
+                eci, C0, C2 = ci.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
                 E_neg = eci + escf
 
             mu[beta] = -(E_pos - E_neg)/(2 * F_disp)
