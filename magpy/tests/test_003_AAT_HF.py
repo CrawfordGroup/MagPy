@@ -21,11 +21,8 @@ def test_AAT_HF_H2O():
     rhf_e, rhf_wfn = psi4.energy('SCF', return_wfn=True)
     print(f"  SCF Energy from Psi4: {rhf_e}")
 
-    AAT = magpy.AAT_HF(mol)
-
-    r_disp = 0.0001
-    b_disp = 0.0001
-    I = AAT.compute(r_disp, b_disp)
+    AAT = magpy.AAT(mol)
+    I = AAT.compute()
     print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
     print(I)
 
@@ -61,10 +58,8 @@ def test_AAT_HF_H2O2():
     rhf_e, rhf_wfn = psi4.energy('SCF', return_wfn=True)
     print(f"  SCF Energy from Psi4: {rhf_e}")
 
-    AAT = magpy.AAT_HF(mol)
-    r_disp = 0.0001
-    b_disp = 0.0001
-    I = AAT.compute(r_disp, b_disp)
+    AAT = magpy.AAT(mol)
+    I = AAT.compute()
     print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
     print(I)
 
@@ -105,10 +100,8 @@ def test_AAT_HF_etho():
     rhf_e, rhf_wfn = psi4.energy('SCF', return_wfn=True)
     print(f"  SCF Energy from Psi4: {rhf_e}")
 
-    AAT = magpy.AAT_HF(mol)
-    r_disp = 0.0001
-    b_disp = 0.0001
-    I = AAT.compute(r_disp, b_disp)
+    AAT = magpy.AAT(mol)
+    I = AAT.compute()
     print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
     print(I)
 
