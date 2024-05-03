@@ -67,7 +67,7 @@ jobs:
     - name: Test and generate coverage report
       run: |
         pip install coverage
-        coverage run -m pytest magpy/tests/test_009_hessian_HF.py
+        coverage run -m pytest magpy/tests/test_012_APT_CID.py
         coverage xml 
         ls -l
 
