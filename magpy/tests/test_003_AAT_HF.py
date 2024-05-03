@@ -8,7 +8,7 @@ import os
 np.set_printoptions(precision=10, linewidth=200, threshold=200, suppress=True)
 
 def test_AAT_HF_H2O():
-
+    psi4.core.clean_options()
     psi4.set_memory('2 GB')
     psi4.set_output_file('output.dat', False)
     psi4.set_options({'scf_type': 'pk',
@@ -45,7 +45,7 @@ def test_AAT_HF_H2O():
     assert(np.max(np.abs(analytic_ref-I)) < 1e-7)
 
 def test_AAT_HF_H2O2():
-
+    psi4.core.clean_options()
     psi4.set_memory('2 GB')
     psi4.set_output_file('output.dat', False)
     psi4.set_options({'scf_type': 'pk',
@@ -86,7 +86,7 @@ def test_AAT_HF_H2O2():
 
 
 def test_AAT_HF_etho():
-
+    psi4.core.clean_options()
     psi4.set_memory('2 GB')
     psi4.set_output_file('output.dat', False)
     psi4.set_options({'scf_type': 'pk',

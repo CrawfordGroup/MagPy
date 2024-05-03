@@ -9,7 +9,7 @@ from ..utils import make_np_array
 np.set_printoptions(precision=15, linewidth=200, threshold=200, suppress=True)
 
 def test_AAT_CID_H2DIMER():
-
+    psi4.core.clean_options()
     psi4.set_memory('2 GB')
     psi4.set_output_file('output.dat', False)
     psi4.set_options({'scf_type': 'pk',
@@ -107,7 +107,7 @@ def test_AAT_CID_H2DIMER():
     assert(np.max(np.abs(I_DD_ref-I_DD)) < 1e-9)
 
 def test_AAT_CID_H2DIMER_NORM():
-
+    psi4.core.clean_options()
     psi4.set_memory('2 GB')
     psi4.set_output_file('output.dat', False)
     psi4.set_options({'scf_type': 'pk',
@@ -206,7 +206,7 @@ def test_AAT_CID_H2DIMER_NORM():
     assert(np.max(np.abs(I_DD_ref-I_DD)) < 1e-9)
 
 def test_AAT_CID_H2O():
-
+    psi4.core.clean_options()
     psi4.set_memory('2 GB')
     psi4.set_output_file('output.dat', False)
     psi4.set_options({'scf_type': 'pk',
@@ -292,7 +292,7 @@ def test_AAT_CID_H2O():
     assert(np.max(np.abs(I_DD_ref-I_DD)) < 1e-9)
 
 def test_AAT_CID_H2O_NORM():
-
+    psi4.core.clean_options()
     psi4.set_memory('2 GB')
     psi4.set_output_file('output.dat', False)
     psi4.set_options({'scf_type': 'pk',

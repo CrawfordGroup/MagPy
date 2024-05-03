@@ -12,6 +12,7 @@ import numpy as np
 
 # Test on HF molecule
 def test_ccsd_hf():
+    psi4.core.clean_options()
     psi4.set_memory('2 GB')
     psi4.set_output_file('output.dat', False)
     psi4.set_options({'basis': 'cc-pVDZ',

@@ -8,7 +8,7 @@ import os
 np.set_printoptions(precision=15, linewidth=200, threshold=200, suppress=True)
 
 def test_AAT_nuc():
-
+    psi4.core.clean_options()
     psi4.set_memory('2 GB')
     psi4.set_output_file('output.dat', False)
 

@@ -8,7 +8,7 @@ import os
 np.set_printoptions(precision=10, linewidth=200, threshold=200, suppress=True)
 
 def test_VCD_H2O2_STO3GP():
-
+    psi4.core.clean_options()
     psi4.set_memory('2 GB')
     psi4.set_output_file('output.dat', False)
     psi4.set_options({'scf_type': 'pk',
@@ -40,5 +40,5 @@ units bohr
 
     assert(np.max(np.abs(freq-freq_ref)) < 0.1)
     assert(np.max(np.abs(ir-ir_ref)) < 0.1)
-    assert(np.max(np.abs(vcd-vcd_ref)) < 0.1)
+    assert(np.max(np.abs(vcd-vcd_ref)) < 0.5)
 

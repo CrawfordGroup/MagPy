@@ -9,7 +9,7 @@ np.set_printoptions(precision=10, linewidth=200, threshold=200, suppress=True)
 
 @pytest.mark.skip(reason="not ready")
 def test_VCD_H2Dimer_STO3G():
-
+    psi4.core.clean_options()
     psi4.set_memory('2 GB')
     psi4.set_output_file('output.dat', False)
     psi4.set_options({'scf_type': 'pk',
@@ -24,7 +24,7 @@ def test_VCD_H2Dimer_STO3G():
 
 @pytest.mark.skip(reason="not ready")
 def test_VCD_H2O2_STO3G():
-
+    psi4.core.clean_options()
     psi4.set_memory('2 GB')
     psi4.set_output_file('output.dat', False)
     psi4.set_options({'scf_type': 'pk',
@@ -50,7 +50,7 @@ units bohr
 
 @pytest.mark.skip(reason="not ready")
 def test_VCD_H2O2_STO3G_KP():
-
+    psi4.core.clean_options()
     psi4.set_memory('2 GB')
     psi4.set_output_file('output.dat', False)
     psi4.set_options({'scf_type': 'pk',

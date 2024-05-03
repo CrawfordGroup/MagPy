@@ -8,7 +8,8 @@ import os
 np.set_printoptions(precision=10, linewidth=200, threshold=200, suppress=True)
 
 def test_CID_SO_H2O_STO3G():
-
+    psi4.core.clean_options()
+    psi4.core.clean_options()
     psi4.set_memory('2 GB')
     psi4.set_output_file('output.dat', False)
     psi4.set_options({'scf_type': 'pk',
@@ -74,7 +75,7 @@ def test_CID_SO_H2O_STO3G():
 
 
 def test_CID_SO_H2O_CCPVDZ():
-
+    psi4.core.clean_options()
     psi4.set_memory('2 GB')
     psi4.set_output_file('output.dat', False)
     psi4.set_options({'scf_type': 'pk',

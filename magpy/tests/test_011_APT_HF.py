@@ -9,7 +9,7 @@ from ..utils import make_np_array
 np.set_printoptions(precision=10, linewidth=200, threshold=200, suppress=True)
 
 def test_APT_H2O_STO3G():
-
+    psi4.core.clean_options()
     psi4.set_memory('2 GB')
     psi4.set_output_file('output.dat', False)
     psi4.set_options({'scf_type': 'pk',

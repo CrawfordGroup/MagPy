@@ -54,9 +54,9 @@ class APT(object):
 
             dipder[R] = (mu_p - mu_m)/(2*R_disp)
 
-        if print_level > 0:
-            print("APT (Eh/(e a0^2))")
-            print(dipder)
+#        if print_level > 0:
+        print("APT (Eh/(e a0^2))")
+        print(dipder)
 
         return dipder
 
