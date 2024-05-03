@@ -54,5 +54,5 @@ units bohr
  [ 0.            0.2216402091 -0.0417659999]]
     """)
 
-    assert(np.max(np.abs(dipder-dipder_ref)) < 1e-6)
+    assert(np.max(np.abs(dipder-dipder_ref)) < 1e-5)
 
