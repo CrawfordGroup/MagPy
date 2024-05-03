@@ -30,7 +30,7 @@ requires-python = ">=3.8"
 #"Documentation" = "https://magpy.readthedocs.io/"
 dependencies = [
   "numpy",
-  "opt_einsum"
+  "opt_einsum",
   "codetiming"
 ]
 
