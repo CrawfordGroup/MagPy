@@ -5,6 +5,7 @@ import psi4
 import magpy
 import numpy as np
 from .utils import *
+from codetiming import Timer
 
 
 class AAT(object):
@@ -250,6 +251,8 @@ class AAT(object):
                 ci_B_pos = B_pos[B]
                 ci_B_neg = B_neg[B]
 
+                print(f"Atom = {R//3:d}; Coord = {R%3:d}; Field = {B:d}")
+
                 # <dD/dR|dD/dB>
                 pp, pm, mp, mm = self.AAT_DD(ci_R_pos, ci_R_neg, ci_B_pos, ci_B_neg, S[R][B], o)
                 AAT_DD[R,B] = (((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
@@ -456,6 +459,7 @@ class AAT(object):
 
         return pp, pm, mp, mm
 
+    @Timer()
     def AAT_DD(self, ci_R_pos, ci_R_neg, ci_B_pos, ci_B_neg, S, o):
         no = ci_R_pos.no
         nv = ci_R_pos.nv
