@@ -28,7 +28,7 @@ symmetry c1
 units bohr
             """)
 
-    hessian = magpy.Hessian(mol, 0, 1, 'HF')
+    hessian = magpy.Hessian(mol, 0, 1)
     disp = 0.001
     e_conv = 1e-14
     r_conv = 1e-14
@@ -36,7 +36,7 @@ units bohr
     max_diis=8
     start_diis=1
     print_level=1
-    hess = hessian.compute(disp, e_conv, r_conv, maxiter, max_diis, start_diis, print_level)
+    hess = hessian.compute('HF', disp, e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
 
     # CFOUR HF/STO-3G analytic Hessian
     hess_ref = np.array([

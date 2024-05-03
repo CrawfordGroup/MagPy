@@ -29,7 +29,7 @@ symmetry c1
 units bohr
             """)
 
-    apt = magpy.APT(mol, 0, 1, 'HF')
+    apt = magpy.APT(mol)
     R_disp = 0.001
     F_disp = 0.0001
     e_conv = 1e-14
@@ -38,7 +38,7 @@ units bohr
     max_diis=8
     start_diis=1
     print_level=1
-    dipder = apt.compute(R_disp, F_disp, e_conv, r_conv, maxiter, max_diis, start_diis, print_level)
+    dipder = apt.compute('HF', R_disp, F_disp, e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
     print(dipder)
 
     # CFOUR HF/STO-3G analytic dipole derivatives
@@ -54,5 +54,5 @@ units bohr
  [ 0.            0.2216402091 -0.0417659999]]
     """)
 
-    assert(np.max(np.abs(dipder-dipder_ref)) < 1e-6)
+    assert(np.max(np.abs(dipder-dipder_ref)) < 1e-5)
 

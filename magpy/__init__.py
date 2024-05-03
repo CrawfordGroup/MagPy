@@ -13,6 +13,7 @@ from .aat_ci_so import AAT_CI_SO
 from .hessian import Hessian
 from .apt import APT
 from .normal import normal
+from .aat import AAT
 
 
 #from ._version import __version__

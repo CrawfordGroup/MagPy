@@ -22,13 +22,13 @@ def test_AAT_CID_H2DIMER():
     rhf_e, rhf_wfn = psi4.energy('SCF', return_wfn=True)
     print(f"  SCF Energy from Psi4: {rhf_e}")
 
-    AAT = magpy.AAT_CI(mol, 0, 1, 1, 'intermediate')
+    AAT = magpy.AAT(mol, 0, 1)
 
     r_disp = 0.0001
     b_disp = 0.0001
     e_conv = 1e-13
     r_conv = 1e-13
-    I_00, I_0D, I_D0, I_DD = AAT.compute(r_disp, b_disp, e_conv, r_conv)
+    I_00, I_0D, I_D0, I_DD = AAT.compute('CID', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, normalization='intermediate')
     print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
     print("Hartree-Fock component:")
     print(I_00)
@@ -120,13 +120,14 @@ def test_AAT_CID_H2DIMER_NORM():
     rhf_e, rhf_wfn = psi4.energy('SCF', return_wfn=True)
     print(f"  SCF Energy from Psi4: {rhf_e}")
 
-    AAT = magpy.AAT_CI(mol, 0, 1, 1, 'full')
+    AAT = magpy.AAT(mol, 0, 1)
 
     r_disp = 0.0001
     b_disp = 0.0001
     e_conv = 1e-13
     r_conv = 1e-13
-    I_00, I_0D, I_D0, I_DD = AAT.compute(r_disp, b_disp, e_conv, r_conv)
+    I_00, I_0D, I_D0, I_DD = AAT.compute('CID', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, normalization='full')
+
     print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
     print("Hartree-Fock component:")
     print(I_00)
@@ -218,13 +219,13 @@ def test_AAT_CID_H2O():
     rhf_e, rhf_wfn = psi4.energy('SCF', return_wfn=True)
     print(f"  SCF Energy from Psi4: {rhf_e}")
 
-    AAT = magpy.AAT_CI(mol, 0, 1, 1, 'intermediate')
+    AAT = magpy.AAT(mol, 0, 1)
 
     r_disp = 0.0001
     b_disp = 0.0001
     e_conv = 1e-13
     r_conv = 1e-13
-    I_00, I_0D, I_D0, I_DD = AAT.compute(r_disp, b_disp, e_conv, r_conv)
+    I_00, I_0D, I_D0, I_DD = AAT.compute('CID', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, normalization='intermediate')
     print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
     print("Hartree-Fock component:")
     print(I_00)
@@ -274,15 +275,15 @@ def test_AAT_CID_H2O():
  """)
 
     I_DD_ref = make_np_array("""
-[[-0.                 0.00000000000005  -0.006571145180452]
- [-0.000000000000113  0.000000000000231  0.000000000000325]
- [ 0.036050121268829 -0.000000000000415  0.               ]
- [ 0.000000000000012 -0.000000000000017  0.001267365504146]
- [ 0.000000000000069  0.000000000000001 -0.009999089093936]
- [-0.020642645989297  0.016765832724568 -0.00000000000002 ]
- [ 0.000000000000011 -0.000000000000008  0.001267365503931]
- [-0.000000000000043 -0.000000000000052  0.009999089093942]
- [-0.020642645989002 -0.016765832724794  0.00000000000002 ]]
+[[ 0.000000000000076  0.000000000000007 -0.006571145180512]
+ [ 0.000000000002677  0.000000000001015 -0.000000000000175]
+ [ 0.03605012126928  -0.00000000000062   0.000000000000001]
+ [ 0.000000000000042 -0.000000000000022  0.001267365504038]
+ [ 0.000000000000008  0.000000000000042 -0.009999089093697]
+ [-0.020642645988524  0.016765832724844 -0.000000000000034]
+ [-0.000000000000056 -0.000000000000001  0.001267365504546]
+ [-0.000000000000143  0.000000000000071  0.009999089093786]
+ [-0.020642645988882 -0.016765832725199  0.000000000000003]]
  """)
 
     assert(np.max(np.abs(I_00_ref-I_00)) < 1e-9)
@@ -304,13 +305,14 @@ def test_AAT_CID_H2O_NORM():
     rhf_e, rhf_wfn = psi4.energy('SCF', return_wfn=True)
     print(f"  SCF Energy from Psi4: {rhf_e}")
 
-    AAT = magpy.AAT_CI(mol, 0, 1, 1, 'full')
+    AAT = magpy.AAT(mol, 0, 1)
 
     r_disp = 0.0001
     b_disp = 0.0001
     e_conv = 1e-13
     r_conv = 1e-13
-    I_00, I_0D, I_D0, I_DD = AAT.compute(r_disp, b_disp, e_conv, r_conv)
+    I_00, I_0D, I_D0, I_DD = AAT.compute('CID', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, normalization='full')
+
     print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
     print("Hartree-Fock component:")
     print(I_00)
@@ -360,14 +362,14 @@ def test_AAT_CID_H2O_NORM():
  """)
 
     I_DD_ref = make_np_array("""
-[[ 0.000000000000072  0.000000000000007 -0.006282596322971]
- [ 0.000000000002559  0.00000000000097  -0.000000000000137]
+[[ 0.000000000000072  0.000000000000007 -0.006282596323029]
+ [ 0.000000000002559  0.00000000000097  -0.000000000000168]
  [ 0.034467106277752 -0.000000000000593  0.000000000000001]
- [ 0.00000000000004  -0.000000000000021  0.001211713581436]
- [ 0.000000000000008  0.00000000000004  -0.00956001407078 ]
+ [ 0.00000000000004  -0.000000000000021  0.001211713581405]
+ [ 0.000000000000008  0.00000000000004  -0.009560014070841]
  [-0.019736196388032  0.016029619821933 -0.000000000000033]
  [-0.000000000000054 -0.000000000000001  0.001211713581891]
- [-0.000000000000137  0.000000000000068  0.009560014070954]
+ [-0.000000000000137  0.000000000000068  0.009560014070926]
  [-0.019736196388375 -0.016029619822273  0.000000000000003]]
  """)
 

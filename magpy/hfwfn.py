@@ -9,7 +9,7 @@ from .utils import *
 
 class hfwfn(object):
 
-    def __init__(self, H, charge=0, spin=1, print_level=0):
+    def __init__(self, H, charge=0, spin=1):
 
         # Keep the Hamiltonian (including molecule and basisset)
         self.H = H
@@ -23,7 +23,6 @@ class hfwfn(object):
         # Determine number of orbitals
         self.nbf = H.basisset.nbf()
 
-        self.print_level = print_level
 
     def nelectron(self, charge):
         nelec = -charge
@@ -32,9 +31,16 @@ class hfwfn(object):
 
         return nelec
 
-    def solve_scf(self, e_conv=1e-7, r_conv=1e-7, maxiter=100, max_diis=8, start_diis=1):
 
-        print_level = self.print_level
+    def solve(self, **kwargs): 
+
+        # Extract kwargs
+        e_conv = kwargs.pop('e_conv', 1e-7)
+        r_conv = kwargs.pop('r_conv', 1e-7)
+        maxiter = kwargs.pop('maxiter', 100)
+        max_diis = kwargs.pop('max_diis', 8)
+        start_diis = kwargs.pop('start_diis', 1)
+        print_level = kwargs.pop('print_level', 0)
 
         # Electronic Hamiltonian, including fields
         H = self.H

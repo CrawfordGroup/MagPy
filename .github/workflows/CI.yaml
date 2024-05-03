@@ -21,8 +21,8 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [macOS-latest, ubuntu-latest]
-        python-version: ['3.8', '3.9', '3.10']
+        os: [macOS-latest]
+        python-version: ['3.11']
 
     steps:
     - uses: actions/checkout@v3
@@ -35,7 +35,7 @@ jobs:
         ulimit -a
 
     - name: Create Psi4 Environment
-      uses: conda-incubator/setup-miniconda@v2
+      uses: conda-incubator/setup-miniconda@v3
       with:
         miniconda-version: "latest"
         activate-environment: p4env

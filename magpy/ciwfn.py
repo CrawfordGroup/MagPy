@@ -14,8 +14,6 @@ class ciwfn(object):
 
         self.hfwfn = hfwfn
 
-        self.print_level = hfwfn.print_level
-
         nfzc = hfwfn.H.basisset.n_frozen_core()
 
         valid_normalizations = ['FULL', 'INTERMEDIATE']
@@ -27,9 +25,6 @@ class ciwfn(object):
         nt = self.nt = hfwfn.nbf - nfzc # assumes number of MOs = number of AOs
         no = self.no = hfwfn.ndocc - nfzc
         nv = self.nv = hfwfn.nbf - self.no - nfzc
-
-        if self.print_level > 0:
-            print("\nNMO = %d; NACT = %d; NO = %d; NV = %d" % (hfwfn.nbf, self.nt, self.no, self.nv))
 
         # Set up orbital subspace slices
         o = self.o = slice(0, no)
@@ -43,13 +38,13 @@ class ciwfn(object):
 
         # If there are frozen core orbitals, build and add the frozen-core operator 
         # (core contribution to Fock operator) to the one-electron Hamiltonian
-        efzc = 0
+        self.efzc = 0
         if nfzc > 0:
             C = self.hfwfn.C[:,:nfzc] # only core MOs
             Pc = contract('pi,qi->pq', C.conj(), C)
             ERI = self.hfwfn.H.ERI
             hc = h + 2.0 * contract('pqrs,pq->rs', ERI, Pc) - contract('pqrs,ps->qr', ERI, Pc)
-            efzc = contract('pq,pq->', (h+hc), Pc)
+            self.efzc = contract('pq,pq->', (h+hc), Pc)
             h = hc
 
         # Select active MOs
@@ -73,15 +68,6 @@ class ciwfn(object):
         # Build MO-basis Fock matrix (diagonal for canonical MOs, but we don't assume them)
         F = self.F = self.h + contract('pmqm->pq', L[a,o,a,o])
 
-        # SCF check
-        ESCF = efzc + 2.0 * contract('ii->',self.h[o,o]) + contract('ijij->', L[o,o,o,o])
-        if self.print_level > 0:
-            print("ESCF (electronic) = ", ESCF)
-            print("ESCF (total) =      ", ESCF+self.hfwfn.H.enuc)
-            print("HFWFN ESCF (electronic) = ", self.hfwfn.escf)
-            print("HFWFN ESCF (total) =      ", self.hfwfn.escf + self.hfwfn.enuc)
-        self.E0 = self.hfwfn.escf + self.hfwfn.H.enuc
-
         # Build orbital energy denominators
         eps_occ = np.diag(F)[o]
         eps_vir = np.diag(F)[v]
@@ -90,19 +76,38 @@ class ciwfn(object):
         self.Dijab = Dijab
 
 
-    def solve_cid(self, e_conv=1e-7, r_conv=1e-7, maxiter=100, max_diis=8, start_diis=1):
+    def solve(self, **kwargs):
+
+        # Extract kwargs
+        e_conv = kwargs.pop('e_conv', 1e-7)
+        r_conv = kwargs.pop('r_conv', 1e-7)
+        maxiter = kwargs.pop('maxiter', 100)
+        max_diis = kwargs.pop('max_diis', 8)
+        start_diis = kwargs.pop('start_diis', 1)
+        print_level = kwargs.pop('print_level', 0)
+
+        if print_level > 0:
+            print("\nNMO = %d; NACT = %d; NO = %d; NV = %d" % (self.hfwfn.nbf, self.nt, self.no, self.nv))
 
         o = self.o
         v = self.v
         no = self.no
         nv = self.nv
-        E0 = self.E0
         F = self.F
         ERI = self.ERI
         L = self.L
         Dijab = self.Dijab
 
-        if self.print_level > 0:
+        # SCF check
+        ESCF = self.efzc + 2.0 * contract('ii->',self.h[o,o]) + contract('ijij->', L[o,o,o,o])
+        E0 = self.hfwfn.escf + self.hfwfn.H.enuc
+        if print_level > 0:
+            print("\nESCF (electronic) = ", ESCF)
+            print("ESCF (total) =      ", ESCF+self.hfwfn.H.enuc)
+            print("HFWFN ESCF (electronic) = ", self.hfwfn.escf)
+            print("HFWFN ESCF (total) =      ", self.hfwfn.escf + self.hfwfn.enuc)
+
+        if print_level > 0:
             print("\nSolving projected CID equations.")
 
         # initial guess amplitudes
@@ -115,7 +120,7 @@ class ciwfn(object):
         # Setup DIIS object
         diis = DIIS(C2, max_diis)
 
-        if self.print_level > 0:
+        if print_level > 0:
             print("CID Iter %3d: CID Ecorr = %.15f  dE = %.5E  MP2" % (0, eci, -eci))
 
         ediff = eci
@@ -134,11 +139,11 @@ class ciwfn(object):
 
             ediff = eci - eci_last
 
-            if self.print_level > 0:
+            if print_level > 0:
                 print('CID Iter %3d: CID Ecorr = %.15f  dE = %.5E  rms = %.5E' % (niter, eci, ediff, rms))
 
             if ((abs(ediff) < e_conv) and (abs(rms) < r_conv)):
-                if self.print_level > 0:
+                if print_level > 0:
                     print("\nCID Equations converged.")
                     print("CID Correlation Energy = ", eci)
                     print("CID Total Energy       = ", eci + E0)
@@ -147,7 +152,7 @@ class ciwfn(object):
                 if self.normalization == 'FULL':
                     C0, C2 = self.normalize(o, v, C2)
                     norm = np.sqrt(C0*C0 + 2.0 * contract('ijab,ijab->', C2.conj(), C2) - contract('ijab,ijba', C2.conj(), C2))
-                    if self.print_level > 0:
+                    if print_level > 0:
                         print(f"Normalization check = {norm:18.12f}")
 
                 self.C0 = C0

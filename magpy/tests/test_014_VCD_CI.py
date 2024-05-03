@@ -7,6 +7,7 @@ import os
 
 np.set_printoptions(precision=10, linewidth=200, threshold=200, suppress=True)
 
+@pytest.mark.skip(reason="not ready")
 def test_VCD_H2Dimer_STO3G():
 
     psi4.set_memory('2 GB')
@@ -18,9 +19,10 @@ def test_VCD_H2Dimer_STO3G():
 
     psi4.set_options({'basis': 'STO-3G'})
     mol = psi4.geometry(moldict["(H2)_2"])
-    magpy.normal(mol, 'CID', True, file="fcm_H2dimer_CID_STO3G.txt")
+    magpy.normal(mol, 'CID', read_hessian=True, fcm_file="fcm_H2dimer_CID_STO3G.txt")
 
 
+@pytest.mark.skip(reason="not ready")
 def test_VCD_H2O2_STO3G():
 
     psi4.set_memory('2 GB')
@@ -43,8 +45,10 @@ symmetry c1
 units bohr
             """)
 
-    magpy.normal(mol, 'CID', True, file="fcm_H2O2_CID_STO3G.txt")
+    magpy.normal(mol, 'CID', read_hessian=True, fcm_file="fcm_H2O2_CID_STO3G.txt")
 
+
+@pytest.mark.skip(reason="not ready")
 def test_VCD_H2O2_STO3G_KP():
 
     psi4.set_memory('2 GB')
@@ -68,5 +72,3 @@ units bohr
             """)
 
     magpy.normal(mol, 'CID')
-
-

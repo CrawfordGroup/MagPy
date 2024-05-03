@@ -28,15 +28,15 @@ symmetry c1
 units bohr
             """)
 
-    hessian = magpy.Hessian(mol, 0, 1, 'CID')
+    hessian = magpy.Hessian(mol)
     disp = 0.001
-    e_conv = 1e-14
-    r_conv = 1e-14
+    e_conv = 1e-13
+    r_conv = 1e-13
     maxiter = 400
     max_diis=8
     start_diis=1
     print_level=1
-    hess = hessian.compute(disp, e_conv, r_conv, maxiter, max_diis, start_diis, print_level)
+    hess = hessian.compute('CID', disp, e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
 
     # CFOUR CID/STO-3G finite-difference Hessian
     hess_ref = np.array([

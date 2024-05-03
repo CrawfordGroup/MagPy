@@ -34,18 +34,15 @@ def test_ccsd_hf():
     # Get MagPy energies and dipole moment
     H = magpy.Hamiltonian(mol)
     scf = magpy.hfwfn(H)
-    e_conv = 1e-13
-    r_conv = 1e-13
-    maxiter = 100
-    escf, C = scf.solve_scf(e_conv, r_conv, maxiter)
+    escf, C = scf.solve(e_conv=1e-13, r_conv=1e-13)
 
     A = 0.0001
     H.add_field(field='electric-dipole', strength=np.array([0.0, 0.0, A]))
-    escf_pos, C_pos = scf.solve_scf(e_conv, r_conv, maxiter)
+    escf_pos, C_pos = scf.solve(e_conv=1e-13, r_conv=1e-13)
 
     H.reset_V()
     H.add_field(field='electric-dipole', strength=np.array([0.0, 0.0, -A]))
-    escf_neg, C_neg = scf.solve_scf(e_conv, r_conv, maxiter)
+    escf_neg, C_neg = scf.solve(e_conv=1e-13, r_conv=1e-13)
 
     mu = -(escf_pos - escf_neg)/(2 * A)
 
