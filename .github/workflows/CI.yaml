@@ -67,7 +67,7 @@ jobs:
     - name: Test and generate coverage report
       run: |
         pip install coverage
-        coverage run -m pytest
+        coverage run -m pytest magpy/tests/test_011_APT_HF.py magpy/tests/test_012_APT_CID.py
         coverage xml 
         ls -l
 

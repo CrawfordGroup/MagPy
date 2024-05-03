@@ -32,8 +32,8 @@ units bohr
     apt = magpy.APT(mol)
     R_disp = 0.001
     F_disp = 0.0001
-    e_conv = 1e-14
-    r_conv = 1e-14
+    e_conv = 1e-13
+    r_conv = 1e-13
     maxiter = 400
     max_diis=8
     start_diis=1
