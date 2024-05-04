@@ -1,6 +1,7 @@
 MagPy
 ==============================
 [//]: # (Badges)
+[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![GitHub Actions Build Status](https://github.com/CrawfordGroup/MagPy/workflows/CI/badge.svg)](https://github.com/CrawfordGroup/magpy/actions?query=workflow%3ACI)
 [![codecov](https://codecov.io/gh/CrawfordGroup/MagPy/graph/badge.svg?token=SN87ODLNBW)](https://codecov.io/gh/CrawfordGroup/MagPy)
 
