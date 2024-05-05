@@ -105,8 +105,8 @@ class mpwfn(object):
             norm = np.sqrt(C0*C0 + contract('ijab,ijab->', (2*C2-C2.swapaxes(2,3)).conj(), C2))
             if print_level > 0:
                 print(f"Normalization check = {norm:18.12f}")
-            self.C0 = C0
-            self.C2 = C2
+        self.C0 = C0
+        self.C2 = C2
 
         return emp2, C0, C2
 
