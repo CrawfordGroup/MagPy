@@ -7,6 +7,8 @@ from .hamiltonian import Hamiltonian
 from .hfwfn import hfwfn
 from .ciwfn import ciwfn
 from .ciwfn_so import ciwfn_so
+from .mpwfn import mpwfn
+from .mpwfn_so import mpwfn_so
 from .hessian import Hessian
 from .apt import APT
 from .aat import AAT
