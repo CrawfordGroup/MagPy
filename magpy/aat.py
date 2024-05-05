@@ -25,7 +25,7 @@ class AAT(object):
 
     def compute(self, method='HF', R_disp=0.0001, B_disp=0.0001, **kwargs):
 
-        valid_methods = ['HF', 'CID']
+        valid_methods = ['HF', 'CID', 'MP2']
         method = method.upper()
         if method not in valid_methods:
             raise Exception(f"{method:s} is not an allowed choice of method.")
@@ -64,6 +64,11 @@ class AAT(object):
                 ci0 = magpy.ciwfn(scf0, normalization=normalization)
             else:
                 ci0 = magpy.ciwfn_so(scf0, normalization=normalization)
+        elif method == 'MP2':
+            if orbitals == 'SPATIAL':
+                ci0 = magpy.mpwfn(scf0)
+            else:
+                ci0 = magpy.mpwfn_so(scf0)
 
         # Magnetic field displacements
         B_pos = []
@@ -89,6 +94,13 @@ class AAT(object):
                     ci = magpy.ciwfn_so(scf, normalization=normalization)
                 ci.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
                 B_pos.append(ci)
+            elif method == 'MP2':
+                if orbitals == 'SPATIAL':
+                    ci = magpy.mpwfn(scf)
+                else:
+                    ci = magpy.mpwfn_so(scf)
+                ci.solve(normalization=normalization, print_level=print_level)
+                B_pos.append(ci)
 
             # -B displacement
             if print_level > 0:
@@ -108,6 +120,14 @@ class AAT(object):
                     ci = magpy.ciwfn_so(scf, normalization=normalization)
                 ci.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
                 B_neg.append(ci)
+            elif method == 'MP2':
+                if orbitals == 'SPATIAL':
+                    ci = magpy.mpwfn(scf)
+                else:
+                    ci = magpy.mpwfn_so(scf)
+                ci.solve(normalization=normalization, print_level=print_level)
+                B_neg.append(ci)
+
 
         # Atomic coordinate displacements
         R_pos = []
@@ -133,6 +153,13 @@ class AAT(object):
                     ci = magpy.ciwfn_so(scf, normalization=normalization)
                 ci.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
                 R_pos.append(ci)
+            elif method == 'MP2':
+                if orbitals == 'SPATIAL':
+                    ci = magpy.mpwfn(scf)
+                else:
+                    ci = magpy.mpwfn_so(scf)
+                ci.solve(normalization=normalization, print_level=print_level)
+                R_pos.append(ci)
 
             # -R displacement
             if print_level > 0:
@@ -151,6 +178,13 @@ class AAT(object):
                 else:
                     ci = magpy.ciwfn_so(scf, normalization=normalization)
                 ci.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
+                R_neg.append(ci)
+            elif method == 'MP2':
+                if orbitals == 'SPATIAL':
+                    ci = magpy.mpwfn(scf)
+                else:
+                    ci = magpy.mpwfn_so(scf)
+                ci.solve(normalization=normalization, print_level=print_level)
                 R_neg.append(ci)
 
         # Compute full MO overlap matrix for all combinations of perturbed MOs
@@ -187,7 +221,7 @@ class AAT(object):
         # Compute AAT components using finite-difference
         if method == 'HF':
             o = slice(0,scf0.ndocc)
-        elif method == 'CID':
+        elif method == 'CID' or method == 'MP2':
             o = slice(0,ci0.no)
             no = ci0.no
             nv = ci0.nv
