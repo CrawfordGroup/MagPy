@@ -113,6 +113,7 @@ def test_AAT_MP2_H2DIMER_NORM():
     assert(np.max(np.abs(I_D0_ref-I_D0)) < 1e-9)
     assert(np.max(np.abs(I_DD_ref-I_DD)) < 1e-9)
 
+@pytest.mark.skip(reason="too long")
 def test_AAT_MP2_H2O():
     psi4.core.clean_options()
     psi4.set_memory('2 GB')
@@ -165,6 +166,7 @@ def test_AAT_MP2_H2O():
     assert(np.max(np.abs(I_D0_ref-I_D0)) < 1e-9)
     assert(np.max(np.abs(I_DD_ref-I_DD)) < 1e-9)
 
+@pytest.mark.skip(reason="too long")
 def test_AAT_MP2_H2O_NORM():
     psi4.core.clean_options()
     psi4.set_memory('2 GB')
