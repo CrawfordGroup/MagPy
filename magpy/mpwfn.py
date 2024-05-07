@@ -34,7 +34,7 @@ class mpwfn(object):
         # Select active MOs
         C = self.hfwfn.C[:,nfzc:]
 
-        # AO->MO two-electron integral transformation
+        # AO->MO two-electron integral transformation: (ov|ov)
         ERI = self.hfwfn.H.ERI
         ERI = contract('pqrs,sl->pqrl', ERI, C[:,hfwfn.ndocc-nfzc:])
         ERI = contract('pqrl,rk->pqkl', ERI, C.conj()[:,:hfwfn.ndocc-nfzc])
@@ -42,8 +42,18 @@ class mpwfn(object):
         ERI = contract('pjkl,pi->ijkl', ERI, C.conj()[:,:hfwfn.ndocc-nfzc])
 
         # Convert to Dirac ordering
-        ERI = self.ERI = ERI.swapaxes(1,2)
-        L = self.L = 2.0 * ERI - ERI.swapaxes(2,3)
+        ERI_oovv = self.ERI_oovv = ERI.swapaxes(1,2)
+        L = self.L = 2.0 * ERI_oovv - ERI_oovv.swapaxes(2,3)
+
+        # AO->MO two-electron integral transformation: (vo|vo)
+        ERI = self.hfwfn.H.ERI
+        ERI = contract('pqrs,sl->pqrl', ERI, C[:,:hfwfn.ndocc-nfzc])
+        ERI = contract('pqrl,rk->pqkl', ERI, C.conj()[:,hfwfn.ndocc-nfzc:])
+        ERI = contract('pqkl,qj->pjkl', ERI, C[:,:hfwfn.ndocc-nfzc])
+        ERI = contract('pjkl,pi->ijkl', ERI, C.conj()[:,hfwfn.ndocc-nfzc:])
+
+        # Convert to Dirac ordering
+        ERI_vvoo = self.ERI_vvoo = ERI.swapaxes(1,2)
 
         nt = self.nt = hfwfn.nbf - nfzc # assumes number of MOs = number of AOs
         no = self.no = hfwfn.ndocc - nfzc
@@ -79,7 +89,7 @@ class mpwfn(object):
 
         o = self.o
         v = self.v
-        ERI = self.ERI
+        ERI_vvoo = self.ERI_vvoo
         L = self.L
         Dijab = self.Dijab
 
@@ -90,7 +100,7 @@ class mpwfn(object):
 
         # first-order wfn amplitudes -- intermediate normalization
         C0 = 1.0
-        C2 = ERI/Dijab
+        C2 = ERI_vvoo.swapaxes(0,2).swapaxes(1,3)/Dijab
 
         # MP2 energy
         emp2 = self.compute_mp2_energy(o, v, L, C2)

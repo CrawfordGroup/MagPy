@@ -31,20 +31,6 @@ class mpwfn_so(object):
             self.efzc = contract('pq,pq->', (h+hc), Pc)
             h = hc
 
-        # Select active MOs
-        C = self.hfwfn.C[:,nfzc:]
-
-        # AO->MO two-electron integral transformation
-        ERI = self.hfwfn.H.ERI
-        ERI = contract('pqrs,sl->pqrl', ERI, C[:,hfwfn.ndocc-nfzc:])
-        ERI = contract('pqrl,rk->pqkl', ERI, C.conj()[:,:hfwfn.ndocc-nfzc])
-        ERI = contract('pqkl,qj->pjkl', ERI, C[:,hfwfn.ndocc-nfzc:])
-        ERI = contract('pjkl,pi->ijkl', ERI, C.conj()[:,:hfwfn.ndocc-nfzc])
-        ERI_MO = ERI
-
-        ## Translate Hamiltonian to spin orbital basis
-        data = ERI.dtype
-
         nt = self.nt = 2*(hfwfn.nbf - nfzc) # assumes number of MOs = number of AOs
         no = self.no = 2*(hfwfn.ndocc - nfzc)
         nv = self.nv = self.nt - self.no
@@ -54,15 +40,46 @@ class mpwfn_so(object):
         v = self.v = slice(no, nt)
         a = self.a = slice(0, nt)
 
+        # Select active MOs
+        C = self.hfwfn.C[:,nfzc:]
+
+        # AO->MO two-electron integral transformation: (ov|ov)
+        ERI = self.hfwfn.H.ERI
+        ERI = contract('pqrs,sl->pqrl', ERI, C[:,hfwfn.ndocc-nfzc:])
+        ERI = contract('pqrl,rk->pqkl', ERI, C.conj()[:,:hfwfn.ndocc-nfzc])
+        ERI = contract('pqkl,qj->pjkl', ERI, C[:,hfwfn.ndocc-nfzc:])
+        ERI = contract('pjkl,pi->ijkl', ERI, C.conj()[:,:hfwfn.ndocc-nfzc])
+        ERI = ERI
+
+        ## Translate Hamiltonian to spin orbital basis
+        data = ERI.dtype
+
         # Convert to Dirac ordering
-        ERI = np.zeros((no, no, nv, nv), dtype=data)
+        ERI_oovv = np.zeros((no, no, nv, nv), dtype=data)
         for p in range(no):
             for q in range(no):
                 for r in range(nv):
                     for s in range(nv):
-                        ERI[p,q,r,s] = ERI_MO[p//2,r//2,q//2,s//2] * (p%2 == r%2) * (q%2 == s%2)
-                        ERI[p,q,r,s] -= ERI_MO[p//2,s//2,q//2,r//2] * (p%2 == s%2) * (q%2 == r%2)
-        self.ERI = ERI
+                        ERI_oovv[p,q,r,s] = ERI[p//2,r//2,q//2,s//2] * (p%2 == r%2) * (q%2 == s%2)
+                        ERI_oovv[p,q,r,s] -= ERI[p//2,s//2,q//2,r//2] * (p%2 == s%2) * (q%2 == r%2)
+        self.ERI_oovv = ERI_oovv
+
+        # AO->MO two-electron integral transformation: (vo|vo)
+        ERI = self.hfwfn.H.ERI
+        ERI = contract('pqrs,sl->pqrl', ERI, C[:,:hfwfn.ndocc-nfzc])
+        ERI = contract('pqrl,rk->pqkl', ERI, C.conj()[:,hfwfn.ndocc-nfzc:])
+        ERI = contract('pqkl,qj->pjkl', ERI, C[:,:hfwfn.ndocc-nfzc])
+        ERI = contract('pjkl,pi->ijkl', ERI, C.conj()[:,hfwfn.ndocc-nfzc:])
+
+        # Convert to Dirac ordering
+        ERI_vvoo = np.zeros((nv, nv, no, no), dtype=data)
+        for p in range(nv):
+            for q in range(nv):
+                for r in range(no):
+                    for s in range(no):
+                        ERI_vvoo[p,q,r,s] = ERI[p//2,r//2,q//2,s//2] * (p%2 == r%2) * (q%2 == s%2)
+                        ERI_vvoo[p,q,r,s] -= ERI[p//2,s//2,q//2,r//2] * (p%2 == s%2) * (q%2 == r%2)
+        self.ERI_vvoo = ERI_vvoo
 
         # Build orbital energy denominators
         eps = hfwfn.eps[nfzc:hfwfn.ndocc]
@@ -95,7 +112,8 @@ class mpwfn_so(object):
 
         o = self.o
         v = self.v
-        ERI = self.ERI
+        ERI_vvoo = self.ERI_vvoo
+        ERI_oovv = self.ERI_oovv
         Dijab = self.Dijab
 
         E0 = self.hfwfn.escf + self.hfwfn.H.enuc
@@ -105,10 +123,10 @@ class mpwfn_so(object):
 
         # first-order wfn amplitudes -- intermediate normalization
         C0 = 1.0
-        C2 = ERI/Dijab
+        C2 = ERI_vvoo.swapaxes(0,2).swapaxes(1,3)/Dijab
 
         # MP2 energy
-        emp2 = self.compute_mp2_energy(o, v, ERI, C2)
+        emp2 = self.compute_mp2_energy(o, v, ERI_oovv, C2)
 
         if print_level > 0:
             print("MP2 Correlation Energy = ", emp2)
