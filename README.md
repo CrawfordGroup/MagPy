@@ -7,9 +7,9 @@ MagPy
 
 A Python reference implementation for including explicit magnetic fields in quantum chemical
 calculations. Current capabilities include:
-  - Complex Hartree-Fock (HF) and Configuration Interaction Doubles (CID)
+  - Complex Hartree-Fock (HF), Second-Order Møller-Plesset (MP2), and Configuration Interaction Doubles (CID)
   - Atomic axial tensors via numerical derivatives of wave functions
-  - Vibrational Circular Dichroism spectra for (very) small molecules using SCF and CID wave functions
+  - Vibrational Circular Dichroism spectra for (very) small molecules using HF, MP2 and CID wave functions
 
 This repository is currently under development. To do a developmental install, download this repository and type `pip install -e .` in the repository directory.
 
@@ -17,6 +17,7 @@ This package requires the following:
   - [psi4](https://psicode.org)
   - [numpy](https://numpy.org/)
   - [opt_einsum](https://optimized-einsum.readthedocs.io/en/stable/)
+  - [codetiming](https://pypi.org/project/codetiming/)
 
 ### Copyright
 
