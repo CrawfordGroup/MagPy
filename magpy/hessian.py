@@ -25,7 +25,7 @@ class Hessian(object):
 
     def compute(self, method='HF', disp=0.001, **kwargs):
 
-        valid_methods = ['HF', 'CID']
+        valid_methods = ['HF', 'CID', 'MP2']
         method = method.upper()
         if method not in valid_methods:
             raise Exception(f"{method:s} is not an allowed choice of method.")
@@ -98,4 +98,8 @@ class Hessian(object):
         elif self.method == 'CID':
             ci = magpy.ciwfn(scf)
             eci, C0, C2 = ci.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
+            return eci + escf
+        elif self.method == 'MP2':
+            ci = magpy.mpwfn(scf)
+            eci, C0, C2 = ci.solve(print_level=print_level)
             return eci + escf

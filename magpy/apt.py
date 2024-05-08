@@ -25,7 +25,7 @@ class APT(object):
 
     def compute(self, method='HF', R_disp=0.001, F_disp=0.0001, **kwargs):
 
-        valid_methods = ['HF', 'CID']
+        valid_methods = ['HF', 'CID', 'MP2']
         method = method.upper()
         if method not in valid_methods:
             raise Exception(f"{method:s} is not an allowed choice of method.")
@@ -86,6 +86,10 @@ class APT(object):
                 ci = magpy.ciwfn(scf)
                 eci, C0, C2 = ci.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
                 E_pos = eci + escf
+            elif self.method == 'MP2':
+                ci = magpy.mpwfn(scf)
+                eci, C0, C2 = mp.solve(print_level=print_level)
+                E_pos = eci + escf
 
             H = magpy.Hamiltonian(shift_geom(self.molecule, M*3+alpha, R_disp))
             H.add_field(field='electric-dipole', strength=-1.0*strength[beta])
@@ -97,6 +101,10 @@ class APT(object):
             elif self.method == 'CID':
                 ci = magpy.ciwfn(scf)
                 eci, C0, C2 = ci.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
+                E_neg = eci + escf
+            elif self.method == 'MP2':
+                ci = magpy.mpwfn(scf)
+                eci, C0, C2 = mp.solve(print_level=print_level)
                 E_neg = eci + escf
 
             mu[beta] = -(E_pos - E_neg)/(2 * F_disp)
