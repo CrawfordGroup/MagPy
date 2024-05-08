@@ -88,7 +88,7 @@ class APT(object):
                 E_pos = eci + escf
             elif self.method == 'MP2':
                 ci = magpy.mpwfn(scf)
-                eci, C0, C2 = mp.solve(print_level=print_level)
+                eci, C0, C2 = ci.solve(print_level=print_level)
                 E_pos = eci + escf
 
             H = magpy.Hamiltonian(shift_geom(self.molecule, M*3+alpha, R_disp))
@@ -104,7 +104,7 @@ class APT(object):
                 E_neg = eci + escf
             elif self.method == 'MP2':
                 ci = magpy.mpwfn(scf)
-                eci, C0, C2 = mp.solve(print_level=print_level)
+                eci, C0, C2 = ci.solve(print_level=print_level)
                 E_neg = eci + escf
 
             mu[beta] = -(E_pos - E_neg)/(2 * F_disp)

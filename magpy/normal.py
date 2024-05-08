@@ -5,7 +5,7 @@ from opt_einsum import contract
 
 def normal(molecule, method='HF', r_disp=0.001, f_disp=0.0001, b_disp=0.0001, **kwargs):
 
-    valid_methods = ['HF', 'CID']
+    valid_methods = ['HF', 'CID', 'MP2']
     method = method.upper()
     if method not in valid_methods:
         raise Exception(f"{method:s} is not an allowed choice of method.")
@@ -87,9 +87,9 @@ def normal(molecule, method='HF', r_disp=0.001, f_disp=0.0001, b_disp=0.0001, **
     r_disp = 0.0001 # need smaller displacement for AAT
     AAT = magpy.AAT(molecule)
     if method == 'HF':
-        I = AAT.compute('HF', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
-    elif method == 'CID':
-        I_00, I_0D, I_D0, I_DD = AAT.compute('CID', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
+        I = AAT.compute(method, r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
+    elif method == 'CID' or method == 'MP2':
+        I_00, I_0D, I_D0, I_DD = AAT.compute(method, r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
         I = I_00 + I_DD
     J = AAT.nuclear() # nuclear contribution
     M = I + J   # 3N x 3

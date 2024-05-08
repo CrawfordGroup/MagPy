@@ -68,9 +68,9 @@ class Hessian(object):
 
                     hess[R,R] = -(E2p - 16*Ep + 30*E0 - 16*Em + E2m)/(12*disp*disp)
 
-        if print_level > 0:
-            print("Hessian (Eh/a0^2)")
-            print(hess)
+#        if print_level > 0:
+        print("Hessian (Eh/a0^2)")
+        print(hess)
         return hess
 
 
