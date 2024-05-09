@@ -43,6 +43,11 @@ class AAT(object):
             raise Exception(f"{orbitals:s} is not an allowed choice of orbital representation.")
         self.orbitals = orbitals
 
+        # Select parallel algorithm for <D|D> terms
+        self.parallel = kwargs.pop('parallel', False)
+        if self.parallel is True:
+            self.num_procs = kwargs.pop('num_procs', 4)
+
         # Extract kwargs
         e_conv = kwargs.pop('e_conv', 1e-10)
         r_conv = kwargs.pop('r_conv', 1e-10)
@@ -73,6 +78,9 @@ class AAT(object):
         # Magnetic field displacements
         B_pos = []
         B_neg = []
+        if self.parallel is True:
+            B_pos_amps = []
+            B_neg_amps = []
         for B in range(3):
             strength = np.zeros(3)
 
@@ -94,6 +102,8 @@ class AAT(object):
                     ci = magpy.ciwfn_so(scf, normalization=normalization)
                 ci.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
                 B_pos.append(ci)
+                if self.parallel is True:
+                    B_pos_amps.append(ci.C2)
             elif method == 'MP2':
                 if orbitals == 'SPATIAL':
                     ci = magpy.mpwfn(scf)
@@ -101,6 +111,8 @@ class AAT(object):
                     ci = magpy.mpwfn_so(scf)
                 ci.solve(normalization=normalization, print_level=print_level)
                 B_pos.append(ci)
+                if self.parallel is True:
+                    B_pos_amps.append(ci.C2)
 
             # -B displacement
             if print_level > 0:
@@ -120,6 +132,8 @@ class AAT(object):
                     ci = magpy.ciwfn_so(scf, normalization=normalization)
                 ci.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
                 B_neg.append(ci)
+                if self.parallel is True:
+                    B_neg_amps.append(ci.C2)
             elif method == 'MP2':
                 if orbitals == 'SPATIAL':
                     ci = magpy.mpwfn(scf)
@@ -127,11 +141,16 @@ class AAT(object):
                     ci = magpy.mpwfn_so(scf)
                 ci.solve(normalization=normalization, print_level=print_level)
                 B_neg.append(ci)
+                if self.parallel is True:
+                    B_neg_amps.append(ci.C2)
 
 
         # Atomic coordinate displacements
         R_pos = []
         R_neg = []
+        if self.parallel is True:
+            R_pos_amps = []
+            R_neg_amps = []
         for R in range(3*mol.natom()):
 
             # +R displacement
@@ -153,6 +172,8 @@ class AAT(object):
                     ci = magpy.ciwfn_so(scf, normalization=normalization)
                 ci.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
                 R_pos.append(ci)
+                if self.parallel is True:
+                    R_pos_amps.append(ci.C2)
             elif method == 'MP2':
                 if orbitals == 'SPATIAL':
                     ci = magpy.mpwfn(scf)
@@ -160,6 +181,8 @@ class AAT(object):
                     ci = magpy.mpwfn_so(scf)
                 ci.solve(normalization=normalization, print_level=print_level)
                 R_pos.append(ci)
+                if self.parallel is True:
+                    R_pos_amps.append(ci.C2)
 
             # -R displacement
             if print_level > 0:
@@ -179,6 +202,8 @@ class AAT(object):
                     ci = magpy.ciwfn_so(scf, normalization=normalization)
                 ci.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
                 R_neg.append(ci)
+                if self.parallel is True:
+                    R_neg_amps.append(ci.C2)
             elif method == 'MP2':
                 if orbitals == 'SPATIAL':
                     ci = magpy.mpwfn(scf)
@@ -186,6 +211,8 @@ class AAT(object):
                     ci = magpy.mpwfn_so(scf)
                 ci.solve(normalization=normalization, print_level=print_level)
                 R_neg.append(ci)
+                if self.parallel is True:
+                    R_neg_amps.append(ci.C2)
 
         # Compute full MO overlap matrix for all combinations of perturbed MOs
         S = [[[0 for k in range(4)] for j in range(3)] for i in range(3*mol.natom())] # list of overlap matrices
@@ -276,20 +303,23 @@ class AAT(object):
                 pp, pm, mp, mm = self.AAT_D0(ci_R_pos, ci_R_neg, ci_B_pos, ci_B_neg, S[R][B], o)
                 AAT_D0[R,B] = (((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
 
-        AAT_DD = np.zeros((3*mol.natom(), 3))
-        for R in range(3*mol.natom()):
-            ci_R_pos = R_pos[R]
-            ci_R_neg = R_neg[R]
+        if self.parallel is True:
+            AAT_DD = AAT_DD_parallel(self.num_procs, mol.natom(), R_disp, B_disp, R_pos_amps, R_neg_amps, B_pos_amps, B_neg_amps, S, orbitals)
+        else:
+            AAT_DD = np.zeros((3*mol.natom(), 3))
+            for R in range(3*mol.natom()):
+                ci_R_pos = R_pos[R]
+                ci_R_neg = R_neg[R]
 
-            for B in range(3):
-                ci_B_pos = B_pos[B]
-                ci_B_neg = B_neg[B]
+                for B in range(3):
+                    ci_B_pos = B_pos[B]
+                    ci_B_neg = B_neg[B]
 
-                print(f"Atom = {R//3:d}; Coord = {R%3:d}; Field = {B:d}")
+                    print(f"Atom = {R//3:d}; Coord = {R%3:d}; Field = {B:d}")
 
-                # <dD/dR|dD/dB>
-                pp, pm, mp, mm = self.AAT_DD(ci_R_pos, ci_R_neg, ci_B_pos, ci_B_neg, S[R][B], o)
-                AAT_DD[R,B] = (((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
+                    # <dD/dR|dD/dB>
+                    pp, pm, mp, mm = self.AAT_DD(ci_R_pos, ci_R_neg, ci_B_pos, ci_B_neg, S[R][B], o)
+                    AAT_DD[R,B] = (((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
 
         return AAT_00, AAT_0D, AAT_D0, AAT_DD
 
