@@ -280,11 +280,11 @@ class AAT(object):
                 pp, pm, mp, mm = self.AAT_D0(ci_R_pos, ci_R_neg, ci_B_pos, ci_B_neg, S[R][B], o)
                 AAT_D0[R,B] = (((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
 
+        orbitals = self.orbitals
         if self.parallel is True:
             pool = Pool(processes=self.num_procs)
 
             args = [] # argument list for each R/B combination
-            orbitals = self.orbitals
             for R in range(3*mol.natom()):
                 for B in range(3):
                     args.append([R_disp, B_disp, R_pos[R].C2, R_neg[R].C2, B_pos[B].C2, B_neg[B].C2, S[R][B], orbitals])
@@ -294,17 +294,11 @@ class AAT(object):
         else:
             AAT_DD = np.zeros((3*mol.natom(), 3))
             for R in range(3*mol.natom()):
-                ci_R_pos = R_pos[R]
-                ci_R_neg = R_neg[R]
-
                 for B in range(3):
-                    ci_B_pos = B_pos[B]
-                    ci_B_neg = B_neg[B]
-
                     print(f"Atom = {R//3:d}; Coord = {R%3:d}; Field = {B:d}")
 
                     # <dD/dR|dD/dB>
-                    AAT_DD[R,B] = AAT_DD_element(R_disp, B_disp, R_pos[R].C2, R_neg[R].C2, B_pos[B].C2, B_neg[B].C2, S[R][B], self.orbitals)
+                    AAT_DD[R,B] = AAT_DD_element(R_disp, B_disp, R_pos[R].C2, R_neg[R].C2, B_pos[B].C2, B_neg[B].C2, S[R][B], orbitals)
 
         return AAT_00, AAT_0D, AAT_D0, AAT_DD
 
@@ -472,7 +466,7 @@ class AAT(object):
         return psi4.energy('SCF')
 
 
-#    @Timer()
+@Timer()
 def AAT_DD_element(R_disp, B_disp, C2_R_pos, C2_R_neg, C2_B_pos, C2_B_neg, S, orbitals):
     no = C2_R_pos.shape[0]
     nv = C2_R_pos.shape[2]

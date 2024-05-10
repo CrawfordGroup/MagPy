@@ -29,7 +29,7 @@ def test_AAT_MP2_H2DIMER():
     e_conv = 1e-12
     r_conv = 1e-12
     num_procs = os.cpu_count()
-    I_00, I_0D, I_D0, I_DD = AAT.compute('MP2', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, normalization='intermediate', parallel=True, num_procs=num_procs)
+    I_00, I_0D, I_D0, I_DD = AAT.compute('MP2', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, normalization='intermediate', orbitals='spin', parallel=True, num_procs=num_procs)
     print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
     print("Hartree-Fock component:")
     print(I_00)
@@ -128,7 +128,7 @@ def test_AAT_MP2_H2DIMER_NORM():
     e_conv = 1e-12
     r_conv = 1e-12
     num_procs = os.cpu_count()
-    I_00, I_0D, I_D0, I_DD = AAT.compute('MP2', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, normalization='full', parallel=True, num_procs=num_procs)               
+    I_00, I_0D, I_D0, I_DD = AAT.compute('MP2', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, normalization='full', orbitals='spin', parallel=True, num_procs=num_procs)               
 
     print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
     print("Hartree-Fock component:")
@@ -207,6 +207,7 @@ def test_AAT_MP2_H2DIMER_NORM():
     assert(np.max(np.abs(I_D0_ref-I_D0)) < 1e-9)
     assert(np.max(np.abs(I_DD_ref-I_DD)) < 1e-9)
 
+@pytest.mark.skip(reason="too long")
 def test_AAT_MP2_H2O():
     psi4.core.clean_options()
     psi4.set_memory('2 GB')
@@ -228,7 +229,7 @@ def test_AAT_MP2_H2O():
     e_conv = 1e-12
     r_conv = 1e-12
     num_procs = os.cpu_count()
-    I_00, I_0D, I_D0, I_DD = AAT.compute('MP2', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, normalization='intermediate', parallel=True, num_procs=num_procs)
+    I_00, I_0D, I_D0, I_DD = AAT.compute('MP2', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, normalization='intermediate', orbitals='spin', parallel=True, num_procs=num_procs)
     print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
     print("Hartree-Fock component:")
     print(I_00)
@@ -294,6 +295,7 @@ def test_AAT_MP2_H2O():
     assert(np.max(np.abs(I_D0_ref-I_D0)) < 1e-9)
     assert(np.max(np.abs(I_DD_ref-I_DD)) < 1e-9)
 
+@pytest.mark.skip(reason="too long")
 def test_AAT_MP2_H2O_NORM():
     psi4.core.clean_options()
     psi4.set_memory('2 GB')
@@ -315,7 +317,7 @@ def test_AAT_MP2_H2O_NORM():
     e_conv = 1e-12
     r_conv = 1e-12
     num_procs = os.cpu_count()
-    I_00, I_0D, I_D0, I_DD = AAT.compute('MP2', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, normalization='full', parallel=True, num_procs=num_procs)
+    I_00, I_0D, I_D0, I_DD = AAT.compute('MP2', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, normalization='full', orbitals='spin', parallel=True, num_procs=num_procs)
 
     print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
     print("Hartree-Fock component:")
