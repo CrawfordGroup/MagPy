@@ -4,6 +4,7 @@ from itertools import permutations
 from opt_einsum import contract
 import re
 from ast import literal_eval
+from multiprocessing import Pool
 
 def levi(indexes):
     """
