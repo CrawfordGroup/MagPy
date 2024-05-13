@@ -18,8 +18,19 @@ def test_VCD_H2Dimer_STO3G():
                       'r_convergence': 1e-13})
 
     psi4.set_options({'basis': 'STO-3G'})
-    mol = psi4.geometry(moldict["(H2)_2"])
-    magpy.normal(mol, 'MP2', read_hessian=True, fcm_file="fcm_H2dimer_CID_STO3G.txt")
+    # CID/6-31G* optimized geometry from G09
+    mol = psi4.geometry("""
+    O       0.00000000          1.35909101         -0.103181170
+    O       0.00000000         -1.35909101         -0.103181170
+    H       1.53994623          1.68647251          0.825449361
+    H      -1.53994623         -1.68647251          0.825449361
+    symmetry c1
+    units bohr
+    noreorient
+    no_com
+    """)
+    num_procs = os.cpu_count()
+    magpy.normal(mol, 'MP2', read_hessian=True, fcm_file="fcm_H2O2_CID_631Gd.txt", parallel=True, num_procs=num_procs)
 
 
 @pytest.mark.skip(reason="not ready")

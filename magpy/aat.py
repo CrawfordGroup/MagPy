@@ -47,6 +47,7 @@ class AAT(object):
         self.parallel = kwargs.pop('parallel', False)
         if self.parallel is True:
             self.num_procs = kwargs.pop('num_procs', 4)
+            print(f"AATs will be computed using parallel algorithm with {num_procs:d} processes.")
 
         # Extract kwargs
         e_conv = kwargs.pop('e_conv', 1e-10)
