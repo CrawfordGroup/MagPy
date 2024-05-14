@@ -29,6 +29,7 @@ def test_VCD_H2Dimer_STO3G():
     noreorient
     no_com
     """)
+    print(os.getcwd())
     num_procs = os.cpu_count()
     print_level = 1
     magpy.normal(mol, 'MP2', read_hessian=True, fcm_file="fcm_H2O2_CID_631Gd.txt", parallel=True, num_procs=num_procs)
