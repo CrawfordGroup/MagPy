@@ -17,7 +17,7 @@ def test_VCD_H2Dimer_STO3G():
                       'd_convergence': 1e-13,
                       'r_convergence': 1e-13})
 
-    psi4.set_options({'basis': 'STO-3G'})
+    psi4.set_options({'basis': 'STO-6G'})
     # CID/6-31G* optimized geometry from G09
     mol = psi4.geometry("""
     O       0.00000000          1.35909101         -0.103181170

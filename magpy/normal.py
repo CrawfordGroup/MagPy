@@ -33,7 +33,7 @@ def normal(molecule, method='HF', r_disp=0.001, f_disp=0.0001, b_disp=0.0001, **
         print(f"    Method = {method:s}")
         print(f"    parallel = {parallel}")
         if parallel is True:
-            print(f"    num_proc = {num_proc:d}")
+            print(f"    num_procs = {num_procs:d}")
         print(f"    r_disp = {r_disp:e}")
         print(f"    f_disp = {f_disp:e}")
         print(f"    b_disp = {b_disp:e}")
