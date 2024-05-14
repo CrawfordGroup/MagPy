@@ -41,7 +41,7 @@ class APT(object):
 
         params = [e_conv, r_conv, maxiter, max_diis, start_diis, print_level]
 
-        if print_level > 0:
+        if print_level > 1:
             print("Initial geometry:")
             print(self.molecule.geometry().np)
 
@@ -54,9 +54,9 @@ class APT(object):
 
             dipder[R] = (mu_p - mu_m)/(2*R_disp)
 
-#        if print_level > 0:
-        print("APT (Eh/(e a0^2))")
-        print(dipder)
+        if print_level > 0:
+            print("APT (Eh/(e a0^2))")
+            print(dipder)
 
         return dipder
 
@@ -109,7 +109,7 @@ class APT(object):
 
             mu[beta] = -(E_pos - E_neg)/(2 * F_disp)
 
-        if print_level > 0:
+        if print_level > 2:
             print("Dipole moment = ", mu)
 
         return mu

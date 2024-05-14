@@ -63,7 +63,7 @@ class AAT(object):
         H = magpy.Hamiltonian(mol)
         scf0 = magpy.hfwfn(H, self.charge, self.spin)
         scf0.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
-        if print_level > 0:
+        if print_level > 2:
             print("Psi4 SCF = ", self.run_psi4_scf(H.molecule))
         if method == 'CID':
             if orbitals == 'SPATIAL':
@@ -83,7 +83,7 @@ class AAT(object):
             strength = np.zeros(3)
 
             # +B displacement
-            if print_level > 0:
+            if print_level > 2:
                 print("B(%d)+ Displacement" % (B))
             strength[B] = B_disp
             H = magpy.Hamiltonian(mol)
@@ -109,7 +109,7 @@ class AAT(object):
                 B_pos.append(ci)
 
             # -B displacement
-            if print_level > 0:
+            if print_level > 2:
                 print("B(%d)- Displacement" % (B))
             strength[B] = -B_disp
             H = magpy.Hamiltonian(mol)
@@ -140,13 +140,13 @@ class AAT(object):
         for R in range(3*mol.natom()):
 
             # +R displacement
-            if print_level > 0:
+            if print_level > 2:
                 print("R(%d)+ Displacement" % (R))
             H = magpy.Hamiltonian(shift_geom(mol, R, R_disp))
             rhf_e, rhf_wfn = psi4.energy('SCF', return_wfn=True)
             scf = magpy.hfwfn(H, self.charge, self.spin)
             scf.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
-            if print_level > 0:
+            if print_level > 2:
                 print("Psi4 SCF = ", self.run_psi4_scf(H.molecule))
             scf.match_phase(scf0)
             if method == 'HF':
@@ -167,12 +167,12 @@ class AAT(object):
                 R_pos.append(ci)
 
             # -R displacement
-            if print_level > 0:
+            if print_level > 2:
                 print("R(%d)- Displacement" % (R))
             H = magpy.Hamiltonian(shift_geom(mol, R, -R_disp))
             scf = magpy.hfwfn(H, self.charge, self.spin)
             scf.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
-            if print_level > 0:
+            if print_level > 2:
                 print("Psi4 SCF = ", self.run_psi4_scf(H.molecule))
             scf.match_phase(scf0)
             if method == 'HF':
