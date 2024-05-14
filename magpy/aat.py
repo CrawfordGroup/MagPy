@@ -324,8 +324,10 @@ class AAT(object):
                     AAT_DD[R,B] = AAT_DD_element(R_disp, B_disp, R_pos[R].C2, R_neg[R].C2, B_pos[B].C2, B_neg[B].C2, S[R][B], orbitals)
 
         if print_level >= 1:
-            print("Correlated AAT (normalized):")
+            print("Correlated AAT (normalization = {self.normalization}):")
             print(AAT_DD)
+            print("Total electronic AAT (normalization = {self.normalization}):")
+            print(AAT_00 + AAT_DD)
 
         return AAT_00, AAT_0D, AAT_D0, AAT_DD
 
