@@ -39,6 +39,19 @@ class APT(object):
         start_diis = kwargs.pop('start_diis', 1)
         print_level = kwargs.pop('print_level', 0)
 
+        # Title output
+        if print_level >= 1:
+            print("\nAtomic Polar Tensor Computation")
+            print("=================================")
+            print(f"    Method = {method:s}")
+            print(f"    r_disp = {R_disp:e}")
+            print(f"    f_disp = {F_disp:e}")
+            print(f"    e_conv = {e_conv:e}")
+            print(f"    r_conv = {r_conv:e}")
+            print(f"    maxiter = {maxiter:d}")
+            print(f"    max_diis = {max_diis:d}")
+            print(f"    start_diis = {start_diis:d}")
+
         params = [e_conv, r_conv, maxiter, max_diis, start_diis, print_level]
 
         if print_level > 1:

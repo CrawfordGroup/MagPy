@@ -7,7 +7,7 @@ import os
 
 np.set_printoptions(precision=10, linewidth=200, threshold=200, suppress=True)
 
-@pytest.mark.skip(reason="not ready")
+#@pytest.mark.skip(reason="not ready")
 def test_VCD_H2Dimer_STO3G():
     psi4.core.clean_options()
     psi4.set_memory('2 GB')
@@ -30,6 +30,7 @@ def test_VCD_H2Dimer_STO3G():
     no_com
     """)
     num_procs = os.cpu_count()
+    print_level = 1
     magpy.normal(mol, 'MP2', read_hessian=True, fcm_file="fcm_H2O2_CID_631Gd.txt", parallel=True, num_procs=num_procs)
 
 

@@ -28,7 +28,11 @@ def test_AAT_CID_H2DIMER():
     b_disp = 0.0001
     e_conv = 1e-12
     r_conv = 1e-12
-    I_00, I_0D, I_D0, I_DD = AAT.compute('CID', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, normalization='intermediate')
+    print_level = 1
+    I_00, I_0D, I_D0, I_DD = AAT.compute('CID', r_disp, b_disp, e_conv=e_conv,
+                                         r_conv=r_conv,
+                                         normalization='intermediate',
+                                         print_level=print_level)
     print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
     print("Hartree-Fock component:")
     print(I_00)
@@ -126,7 +130,10 @@ def test_AAT_CID_H2DIMER_NORM():
     b_disp = 0.0001
     e_conv = 1e-12
     r_conv = 1e-12
-    I_00, I_0D, I_D0, I_DD = AAT.compute('CID', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, normalization='full')
+    print_level = 1
+    I_00, I_0D, I_D0, I_DD = AAT.compute('CID', r_disp, b_disp, e_conv=e_conv,
+                                         r_conv=r_conv, normalization='full',
+                                         print_level=print_level)
 
     print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
     print("Hartree-Fock component:")
@@ -225,7 +232,11 @@ def test_AAT_CID_H2O():
     b_disp = 0.0001
     e_conv = 1e-12
     r_conv = 1e-12
-    I_00, I_0D, I_D0, I_DD = AAT.compute('CID', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, normalization='intermediate')
+    print_level = 1
+    I_00, I_0D, I_D0, I_DD = AAT.compute('CID', r_disp, b_disp, e_conv=e_conv,
+                                         r_conv=r_conv,
+                                         normalization='intermediate',
+                                         print_level=print_level)
     print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
     print("Hartree-Fock component:")
     print(I_00)
@@ -311,7 +322,10 @@ def test_AAT_CID_H2O_NORM():
     b_disp = 0.0001
     e_conv = 1e-12
     r_conv = 1e-12
-    I_00, I_0D, I_D0, I_DD = AAT.compute('CID', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, normalization='full')
+    print_level = 1
+    I_00, I_0D, I_D0, I_DD = AAT.compute('CID', r_disp, b_disp, e_conv=e_conv,
+                                         r_conv=r_conv, normalization='full',
+                                         print_level=print_level)
 
     print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
     print("Hartree-Fock component:")

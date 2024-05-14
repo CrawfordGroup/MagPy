@@ -47,7 +47,7 @@ class AAT(object):
         self.parallel = kwargs.pop('parallel', False)
         if self.parallel is True:
             self.num_procs = kwargs.pop('num_procs', 4)
-            print(f"AATs will be computed using parallel algorithm with {num_procs:d} processes.")
+            print(f"AATs will be computed using parallel algorithm with {self.num_procs:d} processes.")
 
         # Extract kwargs
         e_conv = kwargs.pop('e_conv', 1e-10)
@@ -56,6 +56,24 @@ class AAT(object):
         max_diis = kwargs.pop('max_diis', 8)
         start_diis = kwargs.pop('start_diis', 1)
         print_level = kwargs.pop('print_level', 0)
+
+        # Title output
+        if print_level >= 1:
+            print("\nAtomic Axial Tensor Computation")
+            print("=================================")
+            print(f"    Method = {method:s}")
+            print(f"    Orbitals = {orbitals:s}")
+            print(f"    Normalization = {normalization:s}")
+            print(f"    parallel = {self.parallel}")
+            if self.parallel is True:
+                print(f"    num_procs = {self.num_procs:d}")
+            print(f"    r_disp = {R_disp:e}")
+            print(f"    b_disp = {B_disp:e}")
+            print(f"    e_conv = {e_conv:e}")
+            print(f"    r_conv = {r_conv:e}")
+            print(f"    maxiter = {maxiter:d}")
+            print(f"    max_diis = {max_diis:d}")
+            print(f"    start_diis = {start_diis:d}")
 
         mol = self.molecule
 
@@ -260,6 +278,10 @@ class AAT(object):
                     mm = det_overlap(self.orbitals, [0], [0], S[R][B][3], o, spins='AAAA') * C0_R_neg * C0_B_neg
                     AAT_00[R,B] = (((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
 
+        if print_level >= 1:
+            print(f"Hartree-Fock AAT (normalization = {self.normalization:s}):")
+            print(AAT_00)
+
         if method == 'HF':
             return AAT_00
 
@@ -300,6 +322,10 @@ class AAT(object):
 
                     # <dD/dR|dD/dB>
                     AAT_DD[R,B] = AAT_DD_element(R_disp, B_disp, R_pos[R].C2, R_neg[R].C2, B_pos[B].C2, B_neg[B].C2, S[R][B], orbitals)
+
+        if print_level >= 1:
+            print("Correlated AAT (normalized):")
+            print(AAT_DD)
 
         return AAT_00, AAT_0D, AAT_D0, AAT_DD
 
