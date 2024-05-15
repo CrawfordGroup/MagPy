@@ -21,10 +21,30 @@ def normal(molecule, method='HF', r_disp=0.001, f_disp=0.0001, b_disp=0.0001, **
     maxiter = kwargs.pop('maxiter', 400)
     max_diis = kwargs.pop('max_diis', 8)
     start_diis = kwargs.pop('start_diis', 1)
-    print_level = kwargs.pop('print_level', 0)
+    print_level = kwargs.pop('print_level', 1)
     read_hessian = kwargs.pop('read_hessian', False)
     if read_hessian == True:
         fcm_file = kwargs.pop('fcm_file', 'fcm')
+
+    # Title output
+    if print_level >= 1:
+        print("IR and VCD Spectra Computation")
+        print("==============================")
+        print(f"    Method = {method:s}")
+        print(f"    parallel = {parallel}")
+        if parallel is True:
+            print(f"    num_procs = {num_procs:d}")
+        print(f"    r_disp = {r_disp:e}")
+        print(f"    f_disp = {f_disp:e}")
+        print(f"    b_disp = {b_disp:e}")
+        print(f"    e_conv = {e_conv:e}")
+        print(f"    r_conv = {r_conv:e}")
+        print(f"    maxiter = {maxiter:d}")
+        print(f"    max_diis = {max_diis:d}")
+        print(f"    start_diis = {start_diis:d}")
+        print(f"    read_hessian = {read_hessian}")
+        if read_hessian is True:
+            print(f"    fcm_file = {fcm_file:s}")
 
     # Physical constants and a few derived units
     _c = psi4.qcel.constants.get("speed of light in vacuum") # m/s

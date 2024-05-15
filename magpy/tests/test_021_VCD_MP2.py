@@ -7,8 +7,8 @@ import os
 
 np.set_printoptions(precision=10, linewidth=200, threshold=200, suppress=True)
 
-@pytest.mark.skip(reason="not ready")
-def test_VCD_H2Dimer_STO3G():
+#@pytest.mark.skip(reason="not ready")
+def test_VCD_H2Dimer_STO3G(pytestconfig):
     psi4.core.clean_options()
     psi4.set_memory('2 GB')
     psi4.set_output_file('output.dat', False)
@@ -17,7 +17,7 @@ def test_VCD_H2Dimer_STO3G():
                       'd_convergence': 1e-13,
                       'r_convergence': 1e-13})
 
-    psi4.set_options({'basis': 'STO-3G'})
+    psi4.set_options({'basis': 'STO-6G'})
     # CID/6-31G* optimized geometry from G09
     mol = psi4.geometry("""
     O       0.00000000          1.35909101         -0.103181170
@@ -29,8 +29,10 @@ def test_VCD_H2Dimer_STO3G():
     noreorient
     no_com
     """)
+    fcm_file = str(pytestconfig.rootdir) + "/magpy/tests/fcm_H2O2_CID_631Gd.txt"
     num_procs = os.cpu_count()
-    magpy.normal(mol, 'MP2', read_hessian=True, fcm_file="fcm_H2O2_CID_631Gd.txt", parallel=True, num_procs=num_procs)
+    print_level = 1
+    magpy.normal(mol, 'MP2', read_hessian=True, fcm_file=fcm_file, parallel=True, num_procs=num_procs)
 
 
 @pytest.mark.skip(reason="not ready")

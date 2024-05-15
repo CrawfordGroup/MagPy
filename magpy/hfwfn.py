@@ -68,7 +68,7 @@ class hfwfn(object):
         # Setup DIIS object
         diis = DIIS(F, max_diis)
 
-        if print_level > 0:
+        if print_level > 2:
             print("\n  Nuclear repulsion energy = %20.12f" % self.enuc)
             print("\n Iter     E(elec,real)          E(elec,imag)             E(tot)                Delta(E)              RMS(D)")
             print(" %02d %20.13f %20.13f %20.13f" % (0, escf.real, escf.imag, escf.real + self.enuc))
@@ -99,7 +99,7 @@ class hfwfn(object):
             ediff = (escf - escf_last).real
             rms = np.linalg.norm(D-D_last).real
 
-            if print_level > 0:
+            if print_level > 2:
                 print(" %02d %20.13f %20.13f %20.13f %20.13f %20.13f" % (niter, escf.real, escf.imag, escf.real + self.enuc, ediff, rms))
 
             # Check for convergence
@@ -107,7 +107,7 @@ class hfwfn(object):
                 self.escf = escf
                 self.C = C
                 self.eps = eps
-                if print_level > 0:
+                if print_level > 2:
                     print("E(SCF) =  %20.15f" % (escf + self.enuc))
                 return (escf+self.enuc), C
 

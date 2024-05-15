@@ -47,7 +47,7 @@ class AAT(object):
         self.parallel = kwargs.pop('parallel', False)
         if self.parallel is True:
             self.num_procs = kwargs.pop('num_procs', 4)
-            print(f"AATs will be computed using parallel algorithm with {num_procs:d} processes.")
+            print(f"AATs will be computed using parallel algorithm with {self.num_procs:d} processes.")
 
         # Extract kwargs
         e_conv = kwargs.pop('e_conv', 1e-10)
@@ -57,13 +57,31 @@ class AAT(object):
         start_diis = kwargs.pop('start_diis', 1)
         print_level = kwargs.pop('print_level', 0)
 
+        # Title output
+        if print_level >= 1:
+            print("\nAtomic Axial Tensor Computation")
+            print("=================================")
+            print(f"    Method = {method:s}")
+            print(f"    Orbitals = {orbitals:s}")
+            print(f"    Normalization = {normalization:s}")
+            print(f"    parallel = {self.parallel}")
+            if self.parallel is True:
+                print(f"    num_procs = {self.num_procs:d}")
+            print(f"    r_disp = {R_disp:e}")
+            print(f"    b_disp = {B_disp:e}")
+            print(f"    e_conv = {e_conv:e}")
+            print(f"    r_conv = {r_conv:e}")
+            print(f"    maxiter = {maxiter:d}")
+            print(f"    max_diis = {max_diis:d}")
+            print(f"    start_diis = {start_diis:d}")
+
         mol = self.molecule
 
         # Compute the unperturbed HF wfn
         H = magpy.Hamiltonian(mol)
         scf0 = magpy.hfwfn(H, self.charge, self.spin)
         scf0.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
-        if print_level > 0:
+        if print_level > 2:
             print("Psi4 SCF = ", self.run_psi4_scf(H.molecule))
         if method == 'CID':
             if orbitals == 'SPATIAL':
@@ -83,7 +101,7 @@ class AAT(object):
             strength = np.zeros(3)
 
             # +B displacement
-            if print_level > 0:
+            if print_level > 2:
                 print("B(%d)+ Displacement" % (B))
             strength[B] = B_disp
             H = magpy.Hamiltonian(mol)
@@ -109,7 +127,7 @@ class AAT(object):
                 B_pos.append(ci)
 
             # -B displacement
-            if print_level > 0:
+            if print_level > 2:
                 print("B(%d)- Displacement" % (B))
             strength[B] = -B_disp
             H = magpy.Hamiltonian(mol)
@@ -140,13 +158,13 @@ class AAT(object):
         for R in range(3*mol.natom()):
 
             # +R displacement
-            if print_level > 0:
+            if print_level > 2:
                 print("R(%d)+ Displacement" % (R))
             H = magpy.Hamiltonian(shift_geom(mol, R, R_disp))
             rhf_e, rhf_wfn = psi4.energy('SCF', return_wfn=True)
             scf = magpy.hfwfn(H, self.charge, self.spin)
             scf.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
-            if print_level > 0:
+            if print_level > 2:
                 print("Psi4 SCF = ", self.run_psi4_scf(H.molecule))
             scf.match_phase(scf0)
             if method == 'HF':
@@ -167,12 +185,12 @@ class AAT(object):
                 R_pos.append(ci)
 
             # -R displacement
-            if print_level > 0:
+            if print_level > 2:
                 print("R(%d)- Displacement" % (R))
             H = magpy.Hamiltonian(shift_geom(mol, R, -R_disp))
             scf = magpy.hfwfn(H, self.charge, self.spin)
             scf.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
-            if print_level > 0:
+            if print_level > 2:
                 print("Psi4 SCF = ", self.run_psi4_scf(H.molecule))
             scf.match_phase(scf0)
             if method == 'HF':
@@ -260,6 +278,10 @@ class AAT(object):
                     mm = det_overlap(self.orbitals, [0], [0], S[R][B][3], o, spins='AAAA') * C0_R_neg * C0_B_neg
                     AAT_00[R,B] = (((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
 
+        if print_level >= 1:
+            print(f"Hartree-Fock AAT (normalization = {self.normalization:s}):")
+            print(AAT_00)
+
         if method == 'HF':
             return AAT_00
 
@@ -300,6 +322,12 @@ class AAT(object):
 
                     # <dD/dR|dD/dB>
                     AAT_DD[R,B] = AAT_DD_element(R_disp, B_disp, R_pos[R].C2, R_neg[R].C2, B_pos[B].C2, B_neg[B].C2, S[R][B], orbitals)
+
+        if print_level >= 1:
+            print("Correlated AAT (normalization = {self.normalization}):")
+            print(AAT_DD)
+            print("Total electronic AAT (normalization = {self.normalization}):")
+            print(AAT_00 + AAT_DD)
 
         return AAT_00, AAT_0D, AAT_D0, AAT_DD
 

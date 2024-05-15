@@ -41,7 +41,7 @@ class Hessian(object):
 
         params = [e_conv, r_conv, maxiter, max_diis, start_diis, print_level]
 
-        if print_level > 0:
+        if print_level > 1:
             print("Initial geometry:")
             print(self.molecule.geometry().np)
 
@@ -68,9 +68,10 @@ class Hessian(object):
 
                     hess[R,R] = -(E2p - 16*Ep + 30*E0 - 16*Em + E2m)/(12*disp*disp)
 
-#        if print_level > 0:
-        print("Hessian (Eh/a0^2)")
-        print(hess)
+        if print_level > 1:
+            print("Hessian (Eh/a0^2)")
+            print(hess)
+
         return hess
 
 
@@ -88,7 +89,7 @@ class Hessian(object):
         H = magpy.Hamiltonian(shift_geom(shift_geom(self.molecule, M1*3+alpha1, disp1), M2*3+alpha2, disp2))
         scf = magpy.hfwfn(H, self.charge, self.spin)
         escf, C = scf.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
-        if print_level > 0:
+        if print_level > 2:
             print(f"{M1:d}, {alpha1:d}; {M2:d}, {alpha2:d} ::: {disp1:0.5f}; {disp2:0.5f}")
             print(H.molecule.geometry().np)
             print(f"ESCF = {escf:18.15f}")

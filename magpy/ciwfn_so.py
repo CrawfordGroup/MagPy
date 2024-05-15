@@ -101,7 +101,7 @@ class ciwfn_so(object):
         start_diis = kwargs.pop('start_diis', 1)
         print_level = kwargs.pop('print_level', 0)
 
-        if print_level > 0:
+        if print_level > 2:
             print("\nNMO = %d; NACT = %d; NO = %d; NV = %d" % (self.hfwfn.nbf, self.nt, self.no, self.nv))
 
         o = self.o
@@ -115,13 +115,13 @@ class ciwfn_so(object):
         # SCF check
         ESCF = contract('ii->',self.h[o,o]) + 0.5 * contract('ijij->', ERI[o,o,o,o])
         E0 = self.hfwfn.escf + self.hfwfn.H.enuc
-        if print_level > 0:
+        if print_level > 2:
             print("ESCF (electronic) = ", ESCF)
             print("ESCF (total) =      ", ESCF+self.hfwfn.H.enuc)
             print("HFWFN ESCF (electronic) = ", self.hfwfn.escf)
             print("HFWFN ESCF (total) =      ", self.hfwfn.escf + self.hfwfn.enuc)
 
-        if print_level > 0:
+        if print_level > 2:
             print("\nSolving projected CID equations.")
 
         # initial guess amplitudes -- intermediate normalization
@@ -134,7 +134,7 @@ class ciwfn_so(object):
         # Setup DIIS object
         diis = DIIS(C2, max_diis)
 
-        if print_level > 0:
+        if print_level > 2:
             print("CID Iter %3d: CID Ecorr = %.15f  dE = %.5E  MP2" % (0, eci, -eci))
 
         ediff = eci
@@ -152,11 +152,11 @@ class ciwfn_so(object):
 
             ediff = eci - eci_last
 
-            if print_level > 0:
+            if print_level > 2:
                 print('CID Iter %3d: CID Ecorr = %.15f  dE = %.5E  rms = %.5E' % (niter, eci, ediff, rms))
 
             if ((abs(ediff) < e_conv) and (abs(rms) < r_conv)):
-                if print_level > 0:
+                if print_level > 2:
                     print("\nCID Equations converged.")
                     print("CID Correlation Energy = ", eci)
                     print("CID Total Energy       = ", eci + E0)
@@ -165,7 +165,7 @@ class ciwfn_so(object):
                 if self.normalization == 'FULL':
                     C0, C2 = self.normalize(o, v, C2)
                     norm = np.sqrt(C0*C0 + (1/4) * contract('ijab,ijab', C2.conj(), C2))
-                    if print_level > 0:
+                    if print_level > 2:
                         print(f"Normalization check = {norm:18.12f}")
                 self.C0 = C0
                 self.C2 = C2

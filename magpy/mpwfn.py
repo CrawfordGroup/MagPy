@@ -84,7 +84,7 @@ class mpwfn(object):
             raise Exception(f"{normalization:s} is not an allowed choice of normalization.")
         self.normalization = normalization
 
-        if print_level > 0:
+        if print_level > 2:
             print("\nNMO = %d; NACT = %d; NO = %d; NV = %d" % (self.hfwfn.nbf, self.nt, self.no, self.nv))
 
         o = self.o
@@ -94,7 +94,7 @@ class mpwfn(object):
         Dijab = self.Dijab
 
         E0 = self.hfwfn.escf + self.hfwfn.H.enuc
-        if print_level > 0:
+        if print_level > 2:
             print("HFWFN ESCF (electronic) = ", self.hfwfn.escf)
             print("HFWFN ESCF (total) =      ", self.hfwfn.escf + self.hfwfn.enuc)
 
@@ -105,7 +105,7 @@ class mpwfn(object):
         # MP2 energy
         emp2 = self.compute_mp2_energy(o, v, L, C2)
 
-        if print_level > 0:
+        if print_level > 2:
             print("MP2 Correlation Energy = ", emp2)
             print("MP2 Total Energy       = ", emp2 + E0)
 
@@ -113,7 +113,7 @@ class mpwfn(object):
         if self.normalization == 'FULL':
             C0, C2 = self.normalize(o, v, C2)
             norm = np.sqrt(C0*C0 + contract('ijab,ijab->', (2*C2-C2.swapaxes(2,3)).conj(), C2))
-            if print_level > 0:
+            if print_level > 2:
                 print(f"Normalization check = {norm:18.12f}")
         self.C0 = C0
         self.C2 = C2
