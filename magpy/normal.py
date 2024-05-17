@@ -12,8 +12,7 @@ def normal(molecule, method='HF', r_disp=0.001, f_disp=0.0001, b_disp=0.0001, **
 
     # Select parallel algorithm for <D|D> terms of AAT
     parallel = kwargs.pop('parallel', False)
-    if parallel is True:
-        num_procs = kwargs.pop('num_procs', 4)
+    num_procs = kwargs.pop('num_procs', 4)
 
     # Extract kwargs
     e_conv = kwargs.pop('e_conv', 1e-13)
@@ -114,7 +113,9 @@ def normal(molecule, method='HF', r_disp=0.001, f_disp=0.0001, b_disp=0.0001, **
     if method == 'HF':
         I = AAT.compute(method, r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
     elif method == 'CID' or method == 'MP2':
-        I_00, I_0D, I_D0, I_DD = AAT.compute(method, r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level, parallel=True, num_procs=num_procs)
+        I_00, I_0D, I_D0, I_DD = AAT.compute(method, r_disp, b_disp, e_conv=e_conv,
+        r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis,
+        print_level=print_level, parallel=parallel, num_procs=num_procs)
         I = I_00 + I_DD
     J = AAT.nuclear() # nuclear contribution
     M = I + J   # 3N x 3
