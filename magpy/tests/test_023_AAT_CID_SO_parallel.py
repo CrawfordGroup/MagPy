@@ -28,9 +28,9 @@ def test_AAT_CID_H2DIMER():
     b_disp = 0.0001
     e_conv = 1e-13
     r_conv = 1e-13
-    num_proc = os.cpu_count()
+    num_procs = os.cpu_count()
     I_00, I_0D, I_D0, I_DD = AAT.compute('CID', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, normalization='intermediate', orbitals='spin', parallel=True,
-                                         num_proc=num_proc)
+                                         num_procs=num_procs)
     print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
     print("Hartree-Fock component:")
     print(I_00)
@@ -128,8 +128,8 @@ def test_AAT_CID_H2DIMER_NORM():
     b_disp = 0.0001
     e_conv = 1e-13
     r_conv = 1e-13
-    num_proc = os.cpu_count()
-    I_00, I_0D, I_D0, I_DD = AAT.compute('CID', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, normalization='full', orbitals='spin', parallel=True, num_proc=num_proc)
+    num_procs = os.cpu_count()
+    I_00, I_0D, I_D0, I_DD = AAT.compute('CID', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, normalization='full', orbitals='spin', parallel=True, num_procs=num_procs)
     print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
     print("Hartree-Fock component:")
     print(I_00)
@@ -228,9 +228,9 @@ def test_AAT_CID_H2O():
     b_disp = 0.0001
     e_conv = 1e-13
     r_conv = 1e-13
-    num_proc = os.cpu_count()
+    num_procs = os.cpu_count()
     I_00, I_0D, I_D0, I_DD = AAT.compute('CID', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, normalization='intermediate', orbitals='spin', parallel=True,
-                                         num_proc=num_proc)
+                                         num_procs=num_procs)
 
     print("Hartree-Fock component:")
     print(I_00)
@@ -317,8 +317,8 @@ def test_AAT_CID_H2O_NORM():
     b_disp = 0.0001
     e_conv = 1e-13
     r_conv = 1e-13
-    num_proc = os.cpu_count()
-    I_00, I_0D, I_D0, I_DD = AAT.compute('CID', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, normalization='full', orbitals='spin', parallel=True, num_proc=num_proc)
+    num_procs = os.cpu_count()
+    I_00, I_0D, I_D0, I_DD = AAT.compute('CID', r_disp, b_disp, e_conv=e_conv, r_conv=r_conv, normalization='full', orbitals='spin', parallel=True, num_procs=num_procs)
     print("Hartree-Fock component:")
     print(I_00)
     print("<0|D> Component\n")

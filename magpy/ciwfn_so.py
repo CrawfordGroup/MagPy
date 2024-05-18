@@ -32,7 +32,7 @@ class ciwfn_so(object):
         self.efzc = 0
         if nfzc > 0:
             C = self.hfwfn.C[:,:nfzc] # only core MOs
-            Pc = contract('pi,qi->pq', C.conj(), C)
+            Pc = contract('pi,qi->pq', C, C.conj())
             ERI = self.hfwfn.H.ERI
             hc = h + 2.0 * contract('pqrs,pq->rs', ERI, Pc) - contract('pqrs,ps->qr', ERI, Pc)
             self.efzc = contract('pq,pq->', (h+hc), Pc)
@@ -58,6 +58,7 @@ class ciwfn_so(object):
         nt = self.nt = 2*(hfwfn.nbf - nfzc) # assumes number of MOs = number of AOs
         no = self.no = 2*(hfwfn.ndocc - nfzc)
         nv = self.nv = self.nt - self.no
+        self.nfzc = 2*nfzc
 
         # Set up orbital subspace slices
         o = self.o = slice(0, no)

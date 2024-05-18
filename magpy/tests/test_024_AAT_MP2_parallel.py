@@ -28,12 +28,12 @@ def test_AAT_MP2_H2DIMER():
     b_disp = 0.0001
     e_conv = 1e-12
     r_conv = 1e-12
-    num_procs = os.cpu_count()
+    num_procss = os.cpu_count()
     print_level = 1
     I_00, I_0D, I_D0, I_DD = AAT.compute('MP2', r_disp, b_disp, e_conv=e_conv,
                                          r_conv=r_conv,
                                          normalization='intermediate',
-                                         parallel=True, num_procs=num_procs,
+                                         parallel=True, num_procss=num_procss,
                                          print_level=print_level)
     print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
     print("Hartree-Fock component:")
@@ -133,10 +133,10 @@ def test_AAT_MP2_H2DIMER_NORM():
     e_conv = 1e-12
     r_conv = 1e-12
     print_level = 1
-    num_procs = os.cpu_count()
+    num_procss = os.cpu_count()
     I_00, I_0D, I_D0, I_DD = AAT.compute('MP2', r_disp, b_disp, e_conv=e_conv,
                                          r_conv=r_conv, normalization='full',
-                                         parallel=True, num_procs=num_procs,
+                                         parallel=True, num_procss=num_procss,
                                          print_level=print_level)
 
     print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
@@ -237,11 +237,11 @@ def test_AAT_MP2_H2O():
     e_conv = 1e-12
     r_conv = 1e-12
     print_level = 1
-    num_procs = os.cpu_count()
+    num_procss = os.cpu_count()
     I_00, I_0D, I_D0, I_DD = AAT.compute('MP2', r_disp, b_disp, e_conv=e_conv,
                                          r_conv=r_conv,
                                          normalization='intermediate',
-                                         parallel=True, num_procs=num_procs,
+                                         parallel=True, num_procss=num_procss,
                                          print_level=print_level)
     print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
     print("Hartree-Fock component:")
@@ -329,10 +329,10 @@ def test_AAT_MP2_H2O_NORM():
     e_conv = 1e-12
     r_conv = 1e-12
     print_level = 1
-    num_procs = os.cpu_count()
+    num_procss = os.cpu_count()
     I_00, I_0D, I_D0, I_DD = AAT.compute('MP2', r_disp, b_disp, e_conv=e_conv,
                                          r_conv=r_conv, normalization='full',
-                                         parallel=True, num_procs=num_procs,
+                                         parallel=True, num_procss=num_procss,
                                          print_level=print_level)
 
     print("\nElectronic Contribution to Atomic Axial Tensor (a.u.):")
