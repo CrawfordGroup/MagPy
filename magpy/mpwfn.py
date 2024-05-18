@@ -22,7 +22,7 @@ class mpwfn(object):
         # If there are frozen core orbitals, build and add the frozen-core operator 
         # (core contribution to Fock operator) to the one-electron Hamiltonian
         self.efzc = 0
-        nfzc = hfwfn.H.basisset.n_frozen_core()
+        self.nfzc = nfzc = hfwfn.H.basisset.n_frozen_core()
         if nfzc > 0:
             C = self.hfwfn.C[:,:nfzc] # only core MOs
             Pc = contract('pi,qi->pq', C.conj(), C)
