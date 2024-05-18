@@ -322,7 +322,8 @@ class AAT(object):
                     print(f"Atom = {R//3:d}; Coord = {R%3:d}; Field = {B:d}")
 
                     # <dD/dR|dD/dB>
-                    AAT_DD[R,B] = AAT_DD_element(R_disp, B_disp, R_pos[R].C2, R_neg[R].C2, B_pos[B].C2, B_neg[B].C2, S[R][B], orbitals)
+                    AAT_DD[R,B] = AAT_DD_element(R_disp, B_disp, R_pos[R].C2, R_neg[R].C2, B_pos[B].C2, B_neg[B].C2,
+                            S[R][B], orbitals, nfzc)
 
         if print_level >= 1:
             print("Correlated AAT (normalization = {self.normalization}):")
