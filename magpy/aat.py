@@ -7,6 +7,7 @@ import numpy as np
 from .utils import *
 from codetiming import Timer
 from multiprocessing import Pool
+import time
 
 class AAT(object):
 
@@ -515,8 +516,9 @@ class AAT(object):
         return psi4.energy('SCF')
 
 
-@Timer()
 def AAT_DD_element(R_disp, B_disp, C2_R_pos, C2_R_neg, C2_B_pos, C2_B_neg, S, orbitals, nfzc):
+    time_init = time.time()
+
     no = C2_R_pos.shape[0]
     nv = C2_R_pos.shape[2]
     o = slice(0,no+nfzc)
@@ -620,6 +622,8 @@ def AAT_DD_element(R_disp, B_disp, C2_R_pos, C2_R_neg, C2_B_pos, C2_B_neg, S, or
                                         det = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o)
                                         mm += (1/16) * C2_R[i,j,a,b] * C2_B[k,l,c,d] * det
 
+    print(f"AAT component has finished in {time.time() - time_init:.3f} seconds.", flush=True)
+    
     return (((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
 
 
