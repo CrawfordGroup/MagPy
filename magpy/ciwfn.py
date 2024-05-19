@@ -14,7 +14,7 @@ class ciwfn(object):
 
         self.hfwfn = hfwfn
 
-        nfzc = hfwfn.H.basisset.n_frozen_core()
+        self.nfzc = nfzc = hfwfn.H.basisset.n_frozen_core()
 
         valid_normalizations = ['FULL', 'INTERMEDIATE']
         normalization = kwargs.pop('normalization', 'FULL').upper()
@@ -41,7 +41,7 @@ class ciwfn(object):
         self.efzc = 0
         if nfzc > 0:
             C = self.hfwfn.C[:,:nfzc] # only core MOs
-            Pc = contract('pi,qi->pq', C.conj(), C)
+            Pc = contract('pi,qi->pq', C, C.conj())
             ERI = self.hfwfn.H.ERI
             hc = h + 2.0 * contract('pqrs,pq->rs', ERI, Pc) - contract('pqrs,ps->qr', ERI, Pc)
             self.efzc = contract('pq,pq->', (h+hc), Pc)
