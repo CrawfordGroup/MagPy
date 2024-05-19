@@ -541,48 +541,48 @@ def AAT_DD_element(R_disp, B_disp, C2_R_pos, C2_R_neg, C2_B_pos, C2_B_neg, S, or
                                         D = d + no + nfzc
                                         C2_R = C2_R_pos; C2_B = C2_B_pos; disp = 0
                                         det_AA_AA = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AAAA')
-                                        det_AA_BB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AABB')
+#                                        det_AA_BB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AABB')
                                         det_AB_AB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='ABAB')
                                         det_AA_AB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AAAB')
                                         det_AB_AA = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='ABAA')
                                         pp += (1/8) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AA_AA
-                                        pp += (1/8) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AA_BB
+#                                        pp += (1/8) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AA_BB
                                         pp += (1/2) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * C2_B[k,l,c,d] *det_AA_AB
                                         pp += (1/2) * C2_R[i,j,a,b] * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AB_AA
                                         pp += C2_R[i,j,a,b] * C2_B[k,l,c,d] *det_AB_AB
 
                                         C2_R = C2_R_pos; C2_B = C2_B_neg; disp = 1
                                         det_AA_AA = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AAAA')
-                                        det_AA_BB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AABB')
+#                                        det_AA_BB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AABB')
                                         det_AB_AB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='ABAB')
                                         det_AA_AB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AAAB')
                                         det_AB_AA = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='ABAA')
                                         pm += (1/8) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AA_AA
-                                        pm += (1/8) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AA_BB
+#                                        pm += (1/8) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AA_BB
                                         pm += (1/2) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * C2_B[k,l,c,d] *det_AA_AB
                                         pm += (1/2) * C2_R[i,j,a,b] * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AB_AA
                                         pm += C2_R[i,j,a,b] * C2_B[k,l,c,d] *det_AB_AB
 
                                         C2_R = C2_R_neg; C2_B = C2_B_pos; disp = 2
                                         det_AA_AA = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AAAA')
-                                        det_AA_BB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AABB')
+#                                        det_AA_BB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AABB')
                                         det_AB_AB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='ABAB')
                                         det_AA_AB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AAAB')
                                         det_AB_AA = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='ABAA')
                                         mp += (1/8) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AA_AA
-                                        mp += (1/8) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AA_BB
+#                                        mp += (1/8) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AA_BB
                                         mp += (1/2) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * C2_B[k,l,c,d] *det_AA_AB
                                         mp += (1/2) * C2_R[i,j,a,b] * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AB_AA
                                         mp += C2_R[i,j,a,b] * C2_B[k,l,c,d] *det_AB_AB
 
                                         C2_R = C2_R_neg; C2_B = C2_B_neg; disp = 3
                                         det_AA_AA = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AAAA')
-                                        det_AA_BB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AABB')
+#                                        det_AA_BB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AABB')
                                         det_AB_AB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='ABAB')
                                         det_AA_AB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AAAB')
                                         det_AB_AA = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='ABAA')
                                         mm += (1/8) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AA_AA
-                                        mm += (1/8) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AA_BB
+#                                        mm += (1/8) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AA_BB
                                         mm += (1/2) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * C2_B[k,l,c,d] *det_AA_AB
                                         mm += (1/2) * C2_R[i,j,a,b] * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AB_AA
                                         mm += C2_R[i,j,a,b] * C2_B[k,l,c,d] *det_AB_AB
