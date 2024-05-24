@@ -8,7 +8,7 @@ import os
 np.set_printoptions(precision=10, linewidth=200, threshold=200, suppress=True)
 
 #@pytest.mark.skip(reason="not ready")
-def test_VCD_H2Dimer_STO3G(pytestconfig):
+def test_VCD_H2Dimer_STO6G(pytestconfig):
     psi4.core.clean_options()
     psi4.set_memory('2 GB')
     psi4.set_output_file('output.dat', False)
@@ -32,7 +32,18 @@ def test_VCD_H2Dimer_STO3G(pytestconfig):
     fcm_file = str(pytestconfig.rootdir) + "/magpy/tests/fcm_H2O2_CID_631Gd.txt"
     num_procs = os.cpu_count()
     print_level = 1
-    magpy.normal(mol, 'MP2', read_hessian=True, fcm_file=fcm_file, parallel=True, num_procs=num_procs)
+    freq, ir, vcd = magpy.normal(mol, 'MP2', read_hessian=True, fcm_file=fcm_file, parallel=True, num_procs=num_procs)
+
+    # CFOUR
+    freq_ref = np.array([3853.69, 3852.33, 1528.10, 1392.62, 1021.70, 371.44])
+    # MagPy ref
+    ir_ref = np.array([24.745, 51.674, 1.372, 47.471, 0.020, 125.908])
+    # MagPy ref
+    vcd_ref = np.array([-71.619, 65.754, 23.006, -14.998, 0.652, 108.598])
+
+    assert(np.max(np.abs(freq-freq_ref)) < 0.1)
+    assert(np.max(np.abs(ir-ir_ref)) < 0.1)
+    assert(np.max(np.abs(vcd-vcd_ref)) < 0.5)
 
 
 @pytest.mark.skip(reason="not ready")

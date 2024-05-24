@@ -383,47 +383,49 @@ class AAT(object):
 
         pp = pm = mp = mm = 0.0
         if self.orbitals == 'SPATIAL':
-            for i in range(no):
-                I = i + nfzc
-                for a in range(nv):
-                    A = a + no + nfzc
-                    for j in range(no):
-                        J = j + nfzc
-                        for b in range(nv):
-                            B = b + no + nfzc
-                            det_AA = det_overlap(self.orbitals, [0], [I, A, J, B], S[0], o, spins='AAAA')
-                            det_AB = det_overlap(self.orbitals, [0], [I, A, J, B], S[0], o, spins='ABAB')
-                            pp += (0.5 * (ci_B_pos.C2[i,j,a,b] - ci_B_pos.C2[i,j,b,a]) * det_AA + ci_B_pos.C2[i,j,a,b] * det_AB) * ci_R_pos.C0
+            for ia in range(no*nv):
+                i = ia // nv; I = i + nfzc
+                a = ia % nv; A = a + no + nfzc
+                for jb in range(ia+1):
+                    j = jb // nv; J = j + nfzc
+                    b = jb % nv; B = b + no + nfzc
 
-                            det_AA = det_overlap(self.orbitals, [0], [I, A, J, B], S[1], o, spins='AAAA')
-                            det_AB = det_overlap(self.orbitals, [0], [I, A, J, B], S[1], o, spins='ABAB')
-                            pm += (0.5 * (ci_B_neg.C2[i,j,a,b] - ci_B_neg.C2[i,j,b,a]) * det_AA + ci_B_neg.C2[i,j,a,b] * det_AB) * ci_R_pos.C0
+                    pref = 2/(1 + float(ia == jb))
 
-                            det_AA = det_overlap(self.orbitals, [0], [I, A, J, B], S[2], o, spins='AAAA')
-                            det_AB = det_overlap(self.orbitals, [0], [I, A, J, B], S[2], o, spins='ABAB')
-                            mp += (0.5 * (ci_B_pos.C2[i,j,a,b] - ci_B_pos.C2[i,j,b,a]) * det_AA + ci_B_pos.C2[i,j,a,b] * det_AB) * ci_R_neg.C0
+                    det_AA = det_overlap(self.orbitals, [0], [I, A, J, B], S[0], o, spins='AAAA')
+                    det_AB = det_overlap(self.orbitals, [0], [I, A, J, B], S[0], o, spins='ABAB')
+                    pp += pref * (0.5 * (ci_B_pos.C2[i,j,a,b] - ci_B_pos.C2[i,j,b,a]) * det_AA + ci_B_pos.C2[i,j,a,b] * det_AB) * ci_R_pos.C0
 
-                            det_AA = det_overlap(self.orbitals, [0], [I, A, J, B], S[3], o, spins='AAAA')
-                            det_AB = det_overlap(self.orbitals, [0], [I, A, J, B], S[3], o, spins='ABAB')
-                            mm += (0.5 * (ci_B_neg.C2[i,j,a,b] - ci_B_neg.C2[i,j,b,a]) * det_AA + ci_B_neg.C2[i,j,a,b] * det_AB) * ci_R_neg.C0
+                    det_AA = det_overlap(self.orbitals, [0], [I, A, J, B], S[1], o, spins='AAAA')
+                    det_AB = det_overlap(self.orbitals, [0], [I, A, J, B], S[1], o, spins='ABAB')
+                    pm += pref * (0.5 * (ci_B_neg.C2[i,j,a,b] - ci_B_neg.C2[i,j,b,a]) * det_AA + ci_B_neg.C2[i,j,a,b] * det_AB) * ci_R_pos.C0
+
+                    det_AA = det_overlap(self.orbitals, [0], [I, A, J, B], S[2], o, spins='AAAA')
+                    det_AB = det_overlap(self.orbitals, [0], [I, A, J, B], S[2], o, spins='ABAB')
+                    mp += pref * (0.5 * (ci_B_pos.C2[i,j,a,b] - ci_B_pos.C2[i,j,b,a]) * det_AA + ci_B_pos.C2[i,j,a,b] * det_AB) * ci_R_neg.C0
+
+                    det_AA = det_overlap(self.orbitals, [0], [I, A, J, B], S[3], o, spins='AAAA')
+                    det_AB = det_overlap(self.orbitals, [0], [I, A, J, B], S[3], o, spins='ABAB')
+                    mm += pref * (0.5 * (ci_B_neg.C2[i,j,a,b] - ci_B_neg.C2[i,j,b,a]) * det_AA + ci_B_neg.C2[i,j,a,b] * det_AB) * ci_R_neg.C0
 
         elif self.orbitals == 'SPIN':
-            for i in range(0, no, 1):
-                I = i + nfzc
-                for a in range(0, nv, 1):
-                    A = a + no + nfzc
-                    for j in range(0, no, 1):
-                        J = j + nfzc
-                        for b in range(0, nv, 1):
-                            B = b + no + nfzc
-                            det = det_overlap(self.orbitals, [0], [I, A, J, B], S[0], o)
-                            pp += 0.25 * ci_B_pos.C2[i,j,a,b] * det * ci_R_pos.C0
-                            det = det_overlap(self.orbitals, [0], [I, A, J, B], S[1], o)
-                            pm += 0.25 * ci_B_neg.C2[i,j,a,b] * det * ci_R_pos.C0
-                            det = det_overlap(self.orbitals, [0], [I, A, J, B], S[2], o)
-                            mp += 0.25 * ci_B_pos.C2[i,j,a,b] * det * ci_R_neg.C0
-                            det = det_overlap(self.orbitals, [0], [I, A, J, B], S[3], o)
-                            mm += 0.25 * ci_B_neg.C2[i,j,a,b] * det * ci_R_neg.C0
+            for ia in range(no*nv):
+                i = ia // nv; I = i + nfzc
+                a = ia % nv; A = a + no + nfzc
+                for jb in range(ia+1):
+                    j = jb // nv; J = j + nfzc
+                    b = jb % nv; B = b + no + nfzc
+
+                    pref = 2/(1 + float(ia == jb))
+
+                    det = det_overlap(self.orbitals, [0], [I, A, J, B], S[0], o)
+                    pp += pref * 0.25 * ci_B_pos.C2[i,j,a,b] * det * ci_R_pos.C0
+                    det = det_overlap(self.orbitals, [0], [I, A, J, B], S[1], o)
+                    pm += pref * 0.25 * ci_B_neg.C2[i,j,a,b] * det * ci_R_pos.C0
+                    det = det_overlap(self.orbitals, [0], [I, A, J, B], S[2], o)
+                    mp += pref * 0.25 * ci_B_pos.C2[i,j,a,b] * det * ci_R_neg.C0
+                    det = det_overlap(self.orbitals, [0], [I, A, J, B], S[3], o)
+                    mm += pref * 0.25 * ci_B_neg.C2[i,j,a,b] * det * ci_R_neg.C0
 
         return pp, pm, mp, mm
 
@@ -434,47 +436,49 @@ class AAT(object):
 
         pp = pm = mp = mm = 0.0
         if self.orbitals == 'SPATIAL':
-            for i in range(no):
-                I = i + nfzc
-                for a in range(nv):
-                    A = a + no + nfzc
-                    for j in range(no):
-                        J = j + nfzc
-                        for b in range(nv):
-                            B = b + no + nfzc
-                            det_AA = det_overlap(self.orbitals, [I, A, J, B], [0], S[0], o, spins='AAAA')
-                            det_AB = det_overlap(self.orbitals, [I, A, J, B], [0], S[0], o, spins='ABAB')
-                            pp += (0.5 * (ci_R_pos.C2[i,j,a,b] - ci_R_pos.C2[i,j,b,a]) * det_AA + ci_R_pos.C2[i,j,a,b] * det_AB) * ci_B_pos.C0
+            for ia in range(no*nv):
+                i = ia//nv; I = i + nfzc
+                a = ia % nv; A = a + no + nfzc
+                for jb in range(ia+1):
+                    j = jb//nv; J = j + nfzc
+                    b = jb % nv; B = b + no + nfzc
 
-                            det_AA = det_overlap(self.orbitals, [I, A, J, B], [0], S[1], o, spins='AAAA')
-                            det_AB = det_overlap(self.orbitals, [I, A, J, B], [0], S[1], o, spins='ABAB')
-                            pm += (0.5 * (ci_R_pos.C2[i,j,a,b] - ci_R_pos.C2[i,j,b,a]) * det_AA + ci_R_pos.C2[i,j,a,b] * det_AB) * ci_B_neg.C0
+                    pref = 2/(1 + float(ia == jb))
 
-                            det_AA = det_overlap(self.orbitals, [I, A, J, B], [0], S[2], o, spins='AAAA')
-                            det_AB = det_overlap(self.orbitals, [I, A, J, B], [0], S[2], o, spins='ABAB')
-                            mp += (0.5 * (ci_R_neg.C2[i,j,a,b] - ci_R_neg.C2[i,j,b,a]) * det_AA + ci_R_neg.C2[i,j,a,b] * det_AB) * ci_B_pos.C0
+                    det_AA = det_overlap(self.orbitals, [I, A, J, B], [0], S[0], o, spins='AAAA')
+                    det_AB = det_overlap(self.orbitals, [I, A, J, B], [0], S[0], o, spins='ABAB')
+                    pp += pref * (0.5 * (ci_R_pos.C2[i,j,a,b] - ci_R_pos.C2[i,j,b,a]) * det_AA + ci_R_pos.C2[i,j,a,b] * det_AB) * ci_B_pos.C0
 
-                            det_AA = det_overlap(self.orbitals, [I, A, J, B], [0], S[3], o, spins='AAAA')
-                            det_AB = det_overlap(self.orbitals, [I, A, J, B], [0], S[3], o, spins='ABAB')
-                            mm += (0.5 * (ci_R_neg.C2[i,j,a,b] - ci_R_neg.C2[i,j,b,a]) * det_AA + ci_R_neg.C2[i,j,a,b] * det_AB) * ci_B_neg.C0
+                    det_AA = det_overlap(self.orbitals, [I, A, J, B], [0], S[1], o, spins='AAAA')
+                    det_AB = det_overlap(self.orbitals, [I, A, J, B], [0], S[1], o, spins='ABAB')
+                    pm += pref * (0.5 * (ci_R_pos.C2[i,j,a,b] - ci_R_pos.C2[i,j,b,a]) * det_AA + ci_R_pos.C2[i,j,a,b] * det_AB) * ci_B_neg.C0
+
+                    det_AA = det_overlap(self.orbitals, [I, A, J, B], [0], S[2], o, spins='AAAA')
+                    det_AB = det_overlap(self.orbitals, [I, A, J, B], [0], S[2], o, spins='ABAB')
+                    mp += pref * (0.5 * (ci_R_neg.C2[i,j,a,b] - ci_R_neg.C2[i,j,b,a]) * det_AA + ci_R_neg.C2[i,j,a,b] * det_AB) * ci_B_pos.C0
+
+                    det_AA = det_overlap(self.orbitals, [I, A, J, B], [0], S[3], o, spins='AAAA')
+                    det_AB = det_overlap(self.orbitals, [I, A, J, B], [0], S[3], o, spins='ABAB')
+                    mm += pref * (0.5 * (ci_R_neg.C2[i,j,a,b] - ci_R_neg.C2[i,j,b,a]) * det_AA + ci_R_neg.C2[i,j,a,b] * det_AB) * ci_B_neg.C0
 
         elif self.orbitals == 'SPIN':
-            for i in range(0, no, 1):
-                I = i + nfzc
-                for a in range(0, nv, 1):
-                    A = a + no + nfzc
-                    for j in range(0, no, 1):
-                        J = j + nfzc
-                        for b in range(0, nv, 1):
-                            B = b + no + nfzc
-                            det = det_overlap(self.orbitals, [I, A, J, B], [0], S[0], o)
-                            pp += 0.25 * ci_R_pos.C2[i,j,a,b] * det * ci_B_pos.C0
-                            det = det_overlap(self.orbitals, [I, A, J, B], [0], S[1], o)
-                            pm += 0.25 * ci_R_pos.C2[i,j,a,b] * det * ci_B_neg.C0
-                            det = det_overlap(self.orbitals, [I, A, J, B], [0], S[2], o)
-                            mp += 0.25 * ci_R_neg.C2[i,j,a,b] * det * ci_B_pos.C0
-                            det = det_overlap(self.orbitals, [I, A, J, B], [0], S[3], o)
-                            mm += 0.25 * ci_R_neg.C2[i,j,a,b] * det * ci_B_neg.C0
+            for ia in range(no*nv):
+                i = ia // nv; I = i + nfzc
+                a = ia % nv; A = a + no + nfzc
+                for jb in range(ia+1):
+                    j = jb // nv; J = j + nfzc
+                    b = jb % nv; B = b + no + nfzc
+
+                    pref = 2/(1 + float(ia == jb))
+
+                    det = det_overlap(self.orbitals, [I, A, J, B], [0], S[0], o)
+                    pp += pref * 0.25 * ci_R_pos.C2[i,j,a,b] * det * ci_B_pos.C0
+                    det = det_overlap(self.orbitals, [I, A, J, B], [0], S[1], o)
+                    pm += pref * 0.25 * ci_R_pos.C2[i,j,a,b] * det * ci_B_neg.C0
+                    det = det_overlap(self.orbitals, [I, A, J, B], [0], S[2], o)
+                    mp += pref * 0.25 * ci_R_neg.C2[i,j,a,b] * det * ci_B_pos.C0
+                    det = det_overlap(self.orbitals, [I, A, J, B], [0], S[3], o)
+                    mm += pref * 0.25 * ci_R_neg.C2[i,j,a,b] * det * ci_B_neg.C0
 
         return pp, pm, mp, mm
 
@@ -525,106 +529,143 @@ def AAT_DD_element(R_disp, B_disp, C2_R_pos, C2_R_neg, C2_B_pos, C2_B_neg, S, or
 
     pp = pm = mp = mm = 0.0
     if orbitals == 'SPATIAL':
-        for i in range(no):
-            I = i + nfzc
-            for a in range(nv):
-                A = a + no + nfzc
-                for j in range(no):
-                    J = j + nfzc
-                    for b in range(nv):
-                        B = b + no + nfzc
-                        for k in range(no):
-                            K = k + nfzc
-                            for c in range(nv):
-                                C = c + no + nfzc
-                                for l in range(no):
-                                    L = l + nfzc
-                                    for d in range(nv):
-                                        D = d + no + nfzc
-                                        C2_R = C2_R_pos; C2_B = C2_B_pos; disp = 0
-                                        det_AA_AA = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AAAA')
-#                                        det_AA_BB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AABB')
-                                        det_AB_AB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='ABAB')
-                                        det_AA_AB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AAAB')
-                                        det_AB_AA = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='ABAA')
-                                        pp += (1/8) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AA_AA
-#                                        pp += (1/8) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AA_BB
-                                        pp += (1/2) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * C2_B[k,l,c,d] *det_AA_AB
-                                        pp += (1/2) * C2_R[i,j,a,b] * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AB_AA
-                                        pp += C2_R[i,j,a,b] * C2_B[k,l,c,d] *det_AB_AB
+        for ia in range(no*nv):
+            i = ia // nv; I = i + nfzc
+            a = ia % nv; A = a + no + nfzc
+            for jb in range(ia+1):
+                j = jb // nv; J = j + nfzc
+                b = jb % nv; B = b + no + nfzc
 
-                                        C2_R = C2_R_pos; C2_B = C2_B_neg; disp = 1
-                                        det_AA_AA = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AAAA')
-#                                        det_AA_BB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AABB')
-                                        det_AB_AB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='ABAB')
-                                        det_AA_AB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AAAB')
-                                        det_AB_AA = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='ABAA')
-                                        pm += (1/8) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AA_AA
-#                                        pm += (1/8) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AA_BB
-                                        pm += (1/2) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * C2_B[k,l,c,d] *det_AA_AB
-                                        pm += (1/2) * C2_R[i,j,a,b] * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AB_AA
-                                        pm += C2_R[i,j,a,b] * C2_B[k,l,c,d] *det_AB_AB
+                pref_bra = 2/(1 + float(ia == jb))
 
-                                        C2_R = C2_R_neg; C2_B = C2_B_pos; disp = 2
-                                        det_AA_AA = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AAAA')
-#                                        det_AA_BB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AABB')
-                                        det_AB_AB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='ABAB')
-                                        det_AA_AB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AAAB')
-                                        det_AB_AA = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='ABAA')
-                                        mp += (1/8) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AA_AA
-#                                        mp += (1/8) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AA_BB
-                                        mp += (1/2) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * C2_B[k,l,c,d] *det_AA_AB
-                                        mp += (1/2) * C2_R[i,j,a,b] * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AB_AA
-                                        mp += C2_R[i,j,a,b] * C2_B[k,l,c,d] *det_AB_AB
+                for kc in range(no*nv):
+                    k = kc // nv; K = k + nfzc
+                    c = kc % nv; C = c + no + nfzc
+                    for ld in range(kc+1):
+                        l = ld // nv; L = l + nfzc
+                        d = ld % nv; D = d + no + nfzc
 
-                                        C2_R = C2_R_neg; C2_B = C2_B_neg; disp = 3
-                                        det_AA_AA = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AAAA')
-#                                        det_AA_BB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AABB')
-                                        det_AB_AB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='ABAB')
-                                        det_AA_AB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AAAB')
-                                        det_AB_AA = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='ABAA')
-                                        mm += (1/8) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AA_AA
-#                                        mm += (1/8) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AA_BB
-                                        mm += (1/2) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * C2_B[k,l,c,d] *det_AA_AB
-                                        mm += (1/2) * C2_R[i,j,a,b] * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AB_AA
-                                        mm += C2_R[i,j,a,b] * C2_B[k,l,c,d] *det_AB_AB
+                        pref_ket = 2/(1 + float(kc == ld))
+                        pref = pref_bra * pref_ket
+
+                        C2_R = C2_R_pos; C2_B = C2_B_pos; disp = 0; val = 0
+                        pp += pref * AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc)
+
+                        C2_R = C2_R_pos; C2_B = C2_B_neg; disp = 1; val = 0
+                        pm += pref * AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc)
+
+                        C2_R = C2_R_neg; C2_B = C2_B_pos; disp = 2; val = 0
+                        mp += pref * AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc)
+
+                        C2_R = C2_R_neg; C2_B = C2_B_neg; disp = 3; val = 0
+                        mm += pref * AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc)
+
+#        pref = 1
+#        for i in range(no):
+#            I = i + nfzc
+#            for a in range(nv):
+#                A = a + no + nfzc
+#                for j in range(no):
+#                    J = j + nfzc
+#                    for b in range(nv):
+#                        B = b + no + nfzc
+#                        for k in range(no):
+#                            K = k + nfzc
+#                            for c in range(nv):
+#                                C = c + no + nfzc
+#                                for l in range(no):
+#                                    L = l + nfzc
+#                                    for d in range(nv):
+#                                        D = d + no + nfzc
+#
+#                                        C2_R = C2_R_pos; C2_B = C2_B_pos; disp = 0; val = 0
+#                                        pp += pref * AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc)
+#
+#                                        C2_R = C2_R_pos; C2_B = C2_B_neg; disp = 1; val = 0
+#                                        pm += pref * AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc)
+#
+#                                        C2_R = C2_R_neg; C2_B = C2_B_pos; disp = 2; val = 0
+#                                        mp += pref * AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc)
+#
+#                                        C2_R = C2_R_neg; C2_B = C2_B_neg; disp = 3; val = 0
+#                                        mm += pref * AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc)
+#
 
     elif orbitals == 'SPIN':
-        for i in range(0, no, 1):
-            I = i + nfzc
-            for a in range(0, nv, 1):
-                A = a + no + nfzc
-                for j in range(0, no, 1):
-                    J = j + nfzc
-                    for b in range(0, nv, 1):
-                        B = b + no + nfzc
-                        for k in range(0, no, 1):
-                            K = k + nfzc
-                            for c in range(0, nv, 1):
-                                C = c + no + nfzc
-                                for l in range(0, no, 1):
-                                    L = l + nfzc
-                                    for d in range(0, nv, 1):
-                                        D = d + no + nfzc
-                                        C2_R = C2_R_pos; C2_B = C2_B_pos; disp = 0
-                                        det = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o)
-                                        pp += (1/16) * C2_R[i,j,a,b] * C2_B[k,l,c,d] * det
+        for ia in range(no*nv):
+            i = ia // nv; I = i + nfzc
+            a = ia % nv; A = a + no + nfzc
+            for jb in range(ia+1):
+                j = jb // nv; J = j + nfzc
+                b = jb % nv; B = b + no + nfzc
 
-                                        C2_R = C2_R_pos; C2_B = C2_B_neg; disp = 1
-                                        det = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o)
-                                        pm += (1/16) * C2_R[i,j,a,b] * C2_B[k,l,c,d] * det
+                pref_bra = 2/(1 + float(ia == jb))
 
-                                        C2_R = C2_R_neg; C2_B = C2_B_pos; disp = 2
-                                        det = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o)
-                                        mp += (1/16) * C2_R[i,j,a,b] * C2_B[k,l,c,d] * det
+                for kc in range(no*nv):
+                    k = kc // nv; K = k + nfzc
+                    c = kc % nv; C = c + no + nfzc
+                    for ld in range(kc+1):
+                        l = ld // nv; L = l + nfzc
+                        d = ld % nv; D = d + no + nfzc
 
-                                        C2_R = C2_R_neg; C2_B = C2_B_neg; disp = 3
-                                        det = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o)
-                                        mm += (1/16) * C2_R[i,j,a,b] * C2_B[k,l,c,d] * det
+                        pref_ket = 2/(1 + float(kc == ld))
+                        pref = pref_bra * pref_ket
+
+                        C2_R = C2_R_pos; C2_B = C2_B_pos; disp = 0
+                        det = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o)
+                        pp += pref * (1/16) * C2_R[i,j,a,b] * C2_B[k,l,c,d] * det
+
+                        C2_R = C2_R_pos; C2_B = C2_B_neg; disp = 1
+                        det = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o)
+                        pm += pref * (1/16) * C2_R[i,j,a,b] * C2_B[k,l,c,d] * det
+
+                        C2_R = C2_R_neg; C2_B = C2_B_pos; disp = 2
+                        det = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o)
+                        mp += pref * (1/16) * C2_R[i,j,a,b] * C2_B[k,l,c,d] * det
+
+                        C2_R = C2_R_neg; C2_B = C2_B_neg; disp = 3
+                        det = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o)
+                        mm += pref * (1/16) * C2_R[i,j,a,b] * C2_B[k,l,c,d] * det
 
     print(f"AAT component has finished in {time.time() - time_init:.3f} seconds.", flush=True)
     
     return (((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
+
+def AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc):
+    orbitals = 'SPATIAL'
+    no = C2_R.shape[0]
+
+    I = i + nfzc; A = a + no + nfzc; J = j + nfzc; B = b + no + nfzc
+    K = k + nfzc; C = c + no + nfzc; L = l + nfzc; D = d + no + nfzc
+
+    det_AA_AA = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AAAA')
+#    det_BB_BB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='BBBB')
+#    det_AA_BB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AABB')
+#    det_BB_AA = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='BBAA')
+#    det_AA_AB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='AAAB')
+#    det_AB_AA = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='ABAA')
+#    det_BB_AB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='BBAB')
+#    det_AB_BB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='ABBB')
+    det_AB_AB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='ABAB')
+    det_AB_BA = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='ABBA')
+#    det_BA_AB = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='BAAB')
+#    det_BA_BA = det_overlap(orbitals, [I, A, J, B], [K, C, L, D], S[disp], o, spins='BABA')
+
+    val = 0
+    val += (1/8) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) * det_AA_AA
+#    val += (1/16) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) * det_BB_BB
+#    val += (1/16) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) * det_AA_BB
+#    val += (1/16) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) * det_BB_AA
+#    val += (1/4) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * C2_B[k,l,c,d] *det_AA_AB
+#    val += (1/4) * C2_R[i,j,a,b] * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AB_AA
+#    val += (1/4) * (C2_R[i,j,a,b] - C2_R[i,j,b,a]) * C2_B[k,l,c,d] *det_BB_AB
+#    val += (1/4) * C2_R[i,j,a,b] * (C2_B[k,l,c,d] - C2_B[k,l,d,c]) *det_AB_BB
+    val += (1/2) * C2_R[i,j,a,b] * C2_B[k,l,c,d] *det_AB_AB
+    val += (1/2) * C2_R[i,j,a,b] * C2_B[k,l,c,d] *det_AB_BA
+#    val += (1/4) * C2_R[i,j,a,b] * C2_B[k,l,c,d] *det_BA_AB
+#    val += (1/4) * C2_R[i,j,a,b] * C2_B[k,l,c,d] *det_BA_BA
+
+    return val
 
 
 # Compute overlap between two determinants in (possibly) different bases
@@ -678,9 +719,12 @@ def det_overlap(orbitals, bra_indices, ket_indices, S, o, spins='AAAA'):
             elif bra_spin == 'AB':
                 S_alpha[[a,i],:] = S_alpha[[i,a],:]
                 S_beta[[b,j],:] = S_beta[[j,b],:]
+            elif bra_spin == 'BA':
+                S_beta[[a,i],:] = S_beta[[i,a],:]
+                S_alpha[[b,j],:] = S_alpha[[j,b],:]
             elif bra_spin == 'BB':
                 S_beta[[a,i],:] = S_beta[[i,a],:]
-                beta[[b,j],:] = S_beta[[j,b],:]
+                S_beta[[b,j],:] = S_beta[[j,b],:] 
         if len(ket_indices) == 4: # double excitation
             i = ket_indices[0]; a = ket_indices[1]
             j = ket_indices[2]; b = ket_indices[3]
@@ -690,9 +734,12 @@ def det_overlap(orbitals, bra_indices, ket_indices, S, o, spins='AAAA'):
             elif ket_spin == 'AB':
                 S_alpha[:,[a,i]] = S_alpha[:,[i,a]]
                 S_beta[:,[b,j]] = S_beta[:,[j,b]]
-            elif bra_spin == 'BB':
-                S_beta[[a,i],:] = S_beta[[i,a],:]
-                beta[[b,j],:] = S_beta[[j,b],:] 
+            elif ket_spin == 'BA':
+                S_beta[:,[a,i]] = S_beta[:,[i,a]]
+                S_alpha[:,[b,j]] = S_alpha[:,[j,b]]
+            elif ket_spin == 'BB':
+                S_beta[:,[a,i]] = S_beta[:,[i,a]]
+                S_beta[:,[b,j]] = S_beta[:,[j,b]] 
 
         return np.linalg.det(S_alpha[o,o])*np.linalg.det(S_beta[o,o]) 
     else:               

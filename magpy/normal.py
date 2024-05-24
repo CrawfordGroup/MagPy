@@ -31,6 +31,7 @@ def normal(molecule, method='HF', r_disp=0.001, f_disp=0.0001, b_disp=0.0001, **
         print("==============================")
         print(f"    Method = {method:s}")
         print(f"    Basis Set = {psi4.core.BasisSet.build(molecule).name():s}")
+        print(f"    Freeze Core = {psi4.core.get_global_option('freeze_core'):s}")
         print(f"    parallel = {parallel}")
         if parallel is True:
             print(f"    num_procs = {num_procs:d}")
