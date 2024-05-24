@@ -26,6 +26,8 @@ class AAT(object):
 
     def compute(self, method='HF', R_disp=0.0001, B_disp=0.0001, **kwargs):
 
+        mol = self.molecule
+
         valid_methods = ['HF', 'CID', 'MP2']
         method = method.upper()
         if method not in valid_methods:
@@ -50,6 +52,14 @@ class AAT(object):
             self.num_procs = kwargs.pop('num_procs', 4)
             print(f"AATs will be computed using parallel algorithm with {self.num_procs:d} processes.")
 
+        # Select special workflow for a single tensor element
+        self.single_element = kwargs.pop('single_element', False)
+        if self.single_element is True:
+            self.element = kwargs.pop('element', [0,0]) # [R,B]
+            # Check if the chosen element is in-bounds
+            if self.element[0] >= 3*mol.natom() or self.element[1] >= 3:
+                raise Exception(f"Chosen AAT element [R,B] = [{self.element[0]:d},{self.element[1]:d}] must be less than [{3*mol.natom():d},3]")
+
         # Extract kwargs
         e_conv = kwargs.pop('e_conv', 1e-10)
         r_conv = kwargs.pop('r_conv', 1e-10)
@@ -68,6 +78,10 @@ class AAT(object):
             print(f"    parallel = {self.parallel}")
             if self.parallel is True:
                 print(f"    num_procs = {self.num_procs:d}")
+            if self.single_element is True:
+                print(f"    AAT element = [{self.element[0]:d}, {self.element[1]:d}]")
+            else:
+                print(f"    AAT element = ALL")
             print(f"    r_disp = {R_disp:e}")
             print(f"    b_disp = {B_disp:e}")
             print(f"    e_conv = {e_conv:e}")
@@ -75,8 +89,6 @@ class AAT(object):
             print(f"    maxiter = {maxiter:d}")
             print(f"    max_diis = {max_diis:d}")
             print(f"    start_diis = {start_diis:d}")
-
-        mol = self.molecule
 
         # Compute the unperturbed HF wfn
         H = magpy.Hamiltonian(mol)
@@ -95,10 +107,20 @@ class AAT(object):
             else:
                 ci0 = magpy.mpwfn_so(scf0)
 
+
         # Magnetic field displacements
         B_pos = []
         B_neg = []
-        for B in range(3):
+
+        # Atomic coordinate displacements
+        R_pos = []
+        R_neg = []
+
+        ### Displaced wave functions for single-element calculation
+        if self.single_element is True:
+            R = self.element[0]
+            B = self.element[1]
+
             strength = np.zeros(3)
 
             # +B displacement
@@ -153,11 +175,6 @@ class AAT(object):
                 ci.solve(normalization=normalization, print_level=print_level)
                 B_neg.append(ci)
 
-        # Atomic coordinate displacements
-        R_pos = []
-        R_neg = []
-        for R in range(3*mol.natom()):
-
             # +R displacement
             if print_level > 2:
                 print("R(%d)+ Displacement" % (R))
@@ -211,37 +228,177 @@ class AAT(object):
                 ci.solve(normalization=normalization, print_level=print_level)
                 R_neg.append(ci)
 
-        # Compute full MO overlap matrix for all combinations of perturbed MOs
-        S = [[[0 for k in range(4)] for j in range(3)] for i in range(3*mol.natom())] # list of overlap matrices
-        for R in range(3*mol.natom()):
-            if method == 'HF':
-                R_pos_C = R_pos[R].C
-                R_neg_C = R_neg[R].C
-                R_pos_H = R_pos[R].H.basisset
-                R_neg_H = R_neg[R].H.basisset
-            else:
-                R_pos_C = R_pos[R].hfwfn.C
-                R_neg_C = R_neg[R].hfwfn.C
-                R_pos_H = R_pos[R].hfwfn.H.basisset
-                R_neg_H = R_neg[R].hfwfn.H.basisset
-
+        ### Displaced wave functions for full tensor
+        else:
             for B in range(3):
+                strength = np.zeros(3)
+    
+                # +B displacement
+                if print_level > 2:
+                    print("B(%d)+ Displacement" % (B))
+                strength[B] = B_disp
+                H = magpy.Hamiltonian(mol)
+                H.add_field(field='magnetic-dipole', strength=strength)
+                scf = magpy.hfwfn(H, self.charge, self.spin)
+                scf.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
+                scf.match_phase(scf0)
                 if method == 'HF':
-                    B_pos_C = B_pos[B].C
-                    B_neg_C = B_neg[B].C
-                    B_pos_H = B_pos[B].H.basisset
-                    B_neg_H = B_neg[B].H.basisset
+                    B_pos.append(scf)
+                elif method == 'CID':
+                    if orbitals == 'SPATIAL':
+                        ci = magpy.ciwfn(scf, normalization=normalization)
+                    else:
+                        ci = magpy.ciwfn_so(scf, normalization=normalization)
+                    ci.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
+                    B_pos.append(ci)
+                elif method == 'MP2':
+                    if orbitals == 'SPATIAL':
+                        ci = magpy.mpwfn(scf)
+                    else:
+                        ci = magpy.mpwfn_so(scf)
+                    ci.solve(normalization=normalization, print_level=print_level)
+                    B_pos.append(ci)
+    
+                # -B displacement
+                if print_level > 2:
+                    print("B(%d)- Displacement" % (B))
+                strength[B] = -B_disp
+                H = magpy.Hamiltonian(mol)
+                H.add_field(field='magnetic-dipole', strength=strength)
+                scf = magpy.hfwfn(H, self.charge, self.spin)
+                scf.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
+                scf.match_phase(scf0)
+                if method == 'HF':
+                    B_neg.append(scf)
+                elif method == 'CID':
+                    if orbitals == 'SPATIAL':
+                        ci = magpy.ciwfn(scf, normalization=normalization)
+                    else:
+                        ci = magpy.ciwfn_so(scf, normalization=normalization)
+                    ci.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
+                    B_neg.append(ci)
+                elif method == 'MP2':
+                    if orbitals == 'SPATIAL':
+                        ci = magpy.mpwfn(scf)
+                    else:
+                        ci = magpy.mpwfn_so(scf)
+                    ci.solve(normalization=normalization, print_level=print_level)
+                    B_neg.append(ci)
+    
+            for R in range(3*mol.natom()):
+    
+                # +R displacement
+                if print_level > 2:
+                    print("R(%d)+ Displacement" % (R))
+                H = magpy.Hamiltonian(shift_geom(mol, R, R_disp))
+                rhf_e, rhf_wfn = psi4.energy('SCF', return_wfn=True)
+                scf = magpy.hfwfn(H, self.charge, self.spin)
+                scf.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
+                if print_level > 2:
+                    print("Psi4 SCF = ", self.run_psi4_scf(H.molecule))
+                scf.match_phase(scf0)
+                if method == 'HF':
+                    R_pos.append(scf)
+                elif method == 'CID':
+                    if orbitals == 'SPATIAL':
+                        ci = magpy.ciwfn(scf, normalization=normalization)
+                    else:
+                        ci = magpy.ciwfn_so(scf, normalization=normalization)
+                    ci.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
+                    R_pos.append(ci)
+                elif method == 'MP2':
+                    if orbitals == 'SPATIAL':
+                        ci = magpy.mpwfn(scf)
+                    else:
+                        ci = magpy.mpwfn_so(scf)
+                    ci.solve(normalization=normalization, print_level=print_level)
+                    R_pos.append(ci)
+    
+                # -R displacement
+                if print_level > 2:
+                    print("R(%d)- Displacement" % (R))
+                H = magpy.Hamiltonian(shift_geom(mol, R, -R_disp))
+                scf = magpy.hfwfn(H, self.charge, self.spin)
+                scf.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
+                if print_level > 2:
+                    print("Psi4 SCF = ", self.run_psi4_scf(H.molecule))
+                scf.match_phase(scf0)
+                if method == 'HF':
+                    R_neg.append(scf)
+                elif method == 'CID':
+                    if orbitals == 'SPATIAL':
+                        ci = magpy.ciwfn(scf, normalization=normalization)
+                    else:
+                        ci = magpy.ciwfn_so(scf, normalization=normalization)
+                    ci.solve(e_conv=e_conv, r_conv=r_conv, maxiter=maxiter, max_diis=max_diis, start_diis=start_diis, print_level=print_level)
+                    R_neg.append(ci)
+                elif method == 'MP2':
+                    if orbitals == 'SPATIAL':
+                        ci = magpy.mpwfn(scf)
+                    else:
+                        ci = magpy.mpwfn_so(scf)
+                    ci.solve(normalization=normalization, print_level=print_level)
+                    R_neg.append(ci)
+    
+        ### Compute full MO overlap matrix for all combinations of perturbed MOs for the chosen AAT tensor element
+        if self.single_element is True:
+            S = [0 for k in range(4)]
+            if method == 'HF':
+                R_pos_C = R_pos[0].C
+                R_neg_C = R_neg[0].C
+                R_pos_H = R_pos[0].H.basisset
+                R_neg_H = R_neg[0].H.basisset
+                B_pos_C = B_pos[0].C
+                B_neg_C = B_neg[0].C
+                B_pos_H = B_pos[0].H.basisset
+                B_neg_H = B_neg[0].H.basisset
+            else:
+                R_pos_C = R_pos[0].hfwfn.C
+                R_neg_C = R_neg[0].hfwfn.C
+                R_pos_H = R_pos[0].hfwfn.H.basisset
+                R_neg_H = R_neg[0].hfwfn.H.basisset
+                B_pos_C = B_pos[0].hfwfn.C
+                B_neg_C = B_neg[0].hfwfn.C
+                B_pos_H = B_pos[0].hfwfn.H.basisset
+                B_neg_H = B_neg[0].hfwfn.H.basisset
+
+            S[0] = self.mo_overlap(R_pos_C, R_pos_H, B_pos_C, B_pos_H)
+            S[1] = self.mo_overlap(R_pos_C, R_pos_H, B_neg_C, B_neg_H)
+            S[2] = self.mo_overlap(R_neg_C, R_neg_H, B_pos_C, B_pos_H)
+            S[3] = self.mo_overlap(R_neg_C, R_neg_H, B_neg_C, B_neg_H)
+
+        ### Compute full MO overlap matrix for all combinations of perturbed MOs for all AAT tensor elements
+        else:
+            S = [[[0 for k in range(4)] for j in range(3)] for i in range(3*mol.natom())] # list of overlap matrices
+            for R in range(3*mol.natom()):
+                if method == 'HF':
+                    R_pos_C = R_pos[R].C
+                    R_neg_C = R_neg[R].C
+                    R_pos_H = R_pos[R].H.basisset
+                    R_neg_H = R_neg[R].H.basisset
                 else:
-                    B_pos_C = B_pos[B].hfwfn.C
-                    B_neg_C = B_neg[B].hfwfn.C
-                    B_pos_H = B_pos[B].hfwfn.H.basisset
-                    B_neg_H = B_neg[B].hfwfn.H.basisset
-
-                S[R][B][0] = self.mo_overlap(R_pos_C, R_pos_H, B_pos_C, B_pos_H)
-                S[R][B][1] = self.mo_overlap(R_pos_C, R_pos_H, B_neg_C, B_neg_H)
-                S[R][B][2] = self.mo_overlap(R_neg_C, R_neg_H, B_pos_C, B_pos_H)
-                S[R][B][3] = self.mo_overlap(R_neg_C, R_neg_H, B_neg_C, B_neg_H)
-
+                    R_pos_C = R_pos[R].hfwfn.C
+                    R_neg_C = R_neg[R].hfwfn.C
+                    R_pos_H = R_pos[R].hfwfn.H.basisset
+                    R_neg_H = R_neg[R].hfwfn.H.basisset
+    
+                for B in range(3):
+                    if method == 'HF':
+                        B_pos_C = B_pos[B].C
+                        B_neg_C = B_neg[B].C
+                        B_pos_H = B_pos[B].H.basisset
+                        B_neg_H = B_neg[B].H.basisset
+                    else:
+                        B_pos_C = B_pos[B].hfwfn.C
+                        B_neg_C = B_neg[B].hfwfn.C
+                        B_pos_H = B_pos[B].hfwfn.H.basisset
+                        B_neg_H = B_neg[B].hfwfn.H.basisset
+    
+                    S[R][B][0] = self.mo_overlap(R_pos_C, R_pos_H, B_pos_C, B_pos_H)
+                    S[R][B][1] = self.mo_overlap(R_pos_C, R_pos_H, B_neg_C, B_neg_H)
+                    S[R][B][2] = self.mo_overlap(R_neg_C, R_neg_H, B_pos_C, B_pos_H)
+                    S[R][B][3] = self.mo_overlap(R_neg_C, R_neg_H, B_neg_C, B_neg_H)
+    
         # Compute AAT components using finite-difference
         if method == 'HF':
             o = slice(0,scf0.ndocc)
@@ -251,35 +408,53 @@ class AAT(object):
             nv = ci0.nv
             nfzc = ci0.nfzc
 
-        # <d0/dR|d0/dB>
-        AAT_00 = np.zeros((3*mol.natom(), 3))
-        for R in range(3*mol.natom()):
+        ### <d0/dR|d0/dB>
+        if self.single_element is True:
             if method == 'HF':
-                C0_R_pos = C0_R_neg = 1.0
+                pp = np.linalg.det(S[0][o,o])
+                pm = np.linalg.det(S[1][o,o])
+                mp = np.linalg.det(S[2][o,o])
+                mm = np.linalg.det(S[3][o,o])
+                AAT_00 = 2*(((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
             else:
-                C0_R_pos = R_pos[R].C0
-                C0_R_neg = R_neg[R].C0
-
-            for B in range(3):
+                C0_R_pos = R_pos[0].C0
+                C0_R_neg = R_neg[0].C0
+                C0_B_pos = B_pos[0].C0
+                C0_B_neg = B_neg[0].C0
+                pp = det_overlap(self.orbitals, [0], [0], S[0], o, spins='AAAA') * C0_R_pos * C0_B_pos
+                pm = det_overlap(self.orbitals, [0], [0], S[1], o, spins='AAAA') * C0_R_pos * C0_B_neg
+                mp = det_overlap(self.orbitals, [0], [0], S[2], o, spins='AAAA') * C0_R_neg * C0_B_pos
+                mm = det_overlap(self.orbitals, [0], [0], S[3], o, spins='AAAA') * C0_R_neg * C0_B_neg
+                AAT_00 = (((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
+        else:
+            AAT_00 = np.zeros((3*mol.natom(), 3))
+            for R in range(3*mol.natom()):
                 if method == 'HF':
-                    C0_B_pos = C0_B_neg = 1.0
+                    C0_R_pos = C0_R_neg = 1.0
                 else:
-                    C0_B_pos = B_pos[B].C0
-                    C0_B_neg = B_neg[B].C0
-
-                if method == 'HF':
-                    pp = np.linalg.det(S[R][B][0][o,o])
-                    pm = np.linalg.det(S[R][B][1][o,o])
-                    mp = np.linalg.det(S[R][B][2][o,o])
-                    mm = np.linalg.det(S[R][B][3][o,o])
-                    AAT_00[R,B] = 2*(((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
-                else:
-                    pp = det_overlap(self.orbitals, [0], [0], S[R][B][0], o, spins='AAAA') * C0_R_pos * C0_B_pos
-                    pm = det_overlap(self.orbitals, [0], [0], S[R][B][1], o, spins='AAAA') * C0_R_pos * C0_B_neg
-                    mp = det_overlap(self.orbitals, [0], [0], S[R][B][2], o, spins='AAAA') * C0_R_neg * C0_B_pos
-                    mm = det_overlap(self.orbitals, [0], [0], S[R][B][3], o, spins='AAAA') * C0_R_neg * C0_B_neg
-                    AAT_00[R,B] = (((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
-
+                    C0_R_pos = R_pos[R].C0
+                    C0_R_neg = R_neg[R].C0
+    
+                for B in range(3):
+                    if method == 'HF':
+                        C0_B_pos = C0_B_neg = 1.0
+                    else:
+                        C0_B_pos = B_pos[B].C0
+                        C0_B_neg = B_neg[B].C0
+    
+                    if method == 'HF':
+                        pp = np.linalg.det(S[R][B][0][o,o])
+                        pm = np.linalg.det(S[R][B][1][o,o])
+                        mp = np.linalg.det(S[R][B][2][o,o])
+                        mm = np.linalg.det(S[R][B][3][o,o])
+                        AAT_00[R,B] = 2*(((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
+                    else:
+                        pp = det_overlap(self.orbitals, [0], [0], S[R][B][0], o, spins='AAAA') * C0_R_pos * C0_B_pos
+                        pm = det_overlap(self.orbitals, [0], [0], S[R][B][1], o, spins='AAAA') * C0_R_pos * C0_B_neg
+                        mp = det_overlap(self.orbitals, [0], [0], S[R][B][2], o, spins='AAAA') * C0_R_neg * C0_B_pos
+                        mm = det_overlap(self.orbitals, [0], [0], S[R][B][3], o, spins='AAAA') * C0_R_neg * C0_B_neg
+                        AAT_00[R,B] = (((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
+    
         if print_level >= 1:
             print(f"Hartree-Fock AAT (normalization = {self.normalization:s}):")
             print(AAT_00)
@@ -287,45 +462,65 @@ class AAT(object):
         if method == 'HF':
             return AAT_00
 
-        AAT_0D = np.zeros((3*mol.natom(), 3))
-        AAT_D0 = np.zeros((3*mol.natom(), 3))
-        for R in range(3*mol.natom()):
-            ci_R_pos = R_pos[R]
-            ci_R_neg = R_neg[R]
+        if self.single_element is True:
+            ci_R_pos = R_pos[0]
+            ci_R_neg = R_neg[0]
+            ci_B_pos = B_pos[0]
+            ci_B_neg = B_neg[0]
 
-            for B in range(3):
-                ci_B_pos = B_pos[B]
-                ci_B_neg = B_neg[B]
+            # <d0/dR|dD/dB>
+            pp, pm, mp, mm = self.AAT_0D(ci_R_pos, ci_R_neg, ci_B_pos, ci_B_neg, S, o)
+            AAT_0D = (((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
 
-                # <d0/dR|dD/dB>
-                pp, pm, mp, mm = self.AAT_0D(ci_R_pos, ci_R_neg, ci_B_pos, ci_B_neg, S[R][B], o)
-                AAT_0D[R,B] = (((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
+            # <dD/dR|d0/dB>
+            pp, pm, mp, mm = self.AAT_D0(ci_R_pos, ci_R_neg, ci_B_pos, ci_B_neg, S, o)
+            AAT_D0 = (((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
 
-                # <dD/dR|d0/dB>
-                pp, pm, mp, mm = self.AAT_D0(ci_R_pos, ci_R_neg, ci_B_pos, ci_B_neg, S[R][B], o)
-                AAT_D0[R,B] = (((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
-
-        orbitals = self.orbitals
-        if self.parallel is True:
-            pool = Pool(processes=self.num_procs)
-
-            args = [] # argument list for each R/B combination
-            for R in range(3*mol.natom()):
-                for B in range(3):
-                    args.append([R_disp, B_disp, R_pos[R].C2, R_neg[R].C2, B_pos[B].C2, B_neg[B].C2, S[R][B], orbitals, nfzc])
-
-            result = pool.starmap_async(AAT_DD_element, args)
-            AAT_DD = np.asarray(result.get()).reshape(3*mol.natom(), 3)
         else:
-            AAT_DD = np.zeros((3*mol.natom(), 3))
+            AAT_0D = np.zeros((3*mol.natom(), 3))
+            AAT_D0 = np.zeros((3*mol.natom(), 3))
             for R in range(3*mol.natom()):
+                ci_R_pos = R_pos[R]
+                ci_R_neg = R_neg[R]
+    
                 for B in range(3):
-                    print(f"Atom = {R//3:d}; Coord = {R%3:d}; Field = {B:d}")
+                    ci_B_pos = B_pos[B]
+                    ci_B_neg = B_neg[B]
+    
+                    # <d0/dR|dD/dB>
+                    pp, pm, mp, mm = self.AAT_0D(ci_R_pos, ci_R_neg, ci_B_pos, ci_B_neg, S[R][B], o)
+                    AAT_0D[R,B] = (((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
+    
+                    # <dD/dR|d0/dB>
+                    pp, pm, mp, mm = self.AAT_D0(ci_R_pos, ci_R_neg, ci_B_pos, ci_B_neg, S[R][B], o)
+                    AAT_D0[R,B] = (((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
+    
+        orbitals = self.orbitals
+        if self.single_element is True:
+            # <dD/dR|dD/dB>
+            AAT_DD = AAT_DD_element(R_disp, B_disp, R_pos[0].C2, R_neg[0].C2, B_pos[0].C2, B_neg[0].C2, S, orbitals, nfzc)
 
-                    # <dD/dR|dD/dB>
-                    AAT_DD[R,B] = AAT_DD_element(R_disp, B_disp, R_pos[R].C2, R_neg[R].C2, B_pos[B].C2, B_neg[B].C2,
-                            S[R][B], orbitals, nfzc)
-
+        else:
+            if self.parallel is True:
+                pool = Pool(processes=self.num_procs)
+    
+                args = [] # argument list for each R/B combination
+                for R in range(3*mol.natom()):
+                    for B in range(3):
+                        args.append([R_disp, B_disp, R_pos[R].C2, R_neg[R].C2, B_pos[B].C2, B_neg[B].C2, S[R][B], orbitals, nfzc])
+    
+                result = pool.starmap_async(AAT_DD_element, args)
+                AAT_DD = np.asarray(result.get()).reshape(3*mol.natom(), 3)
+            else:
+                AAT_DD = np.zeros((3*mol.natom(), 3))
+                for R in range(3*mol.natom()):
+                    for B in range(3):
+                        print(f"Atom = {R//3:d}; Coord = {R%3:d}; Field = {B:d}")
+    
+                        # <dD/dR|dD/dB>
+                        AAT_DD[R,B] = AAT_DD_element(R_disp, B_disp, R_pos[R].C2, R_neg[R].C2, B_pos[B].C2, B_neg[B].C2,
+                                S[R][B], orbitals, nfzc)
+    
         if print_level >= 1:
             print("Correlated AAT (normalization = {self.normalization}):")
             print(AAT_DD)
@@ -520,8 +715,13 @@ class AAT(object):
         return psi4.energy('SCF')
 
 
-def AAT_DD_element(R_disp, B_disp, C2_R_pos, C2_R_neg, C2_B_pos, C2_B_neg, S, orbitals, nfzc):
+def AAT_DD_element(R_disp, B_disp, C2_R_pos, C2_R_neg, C2_B_pos, C2_B_neg, S, orbitals, nfzc, **kwargs):
     time_init = time.time()
+
+    valid_loops = ['FULL', 'RESTRICTED']
+    loops = kwargs.pop('loops', 'restricted').upper()
+    if loops not in valid_loops:
+        raise Exception(f"{loops:s} is not an allowed choice of loop structure for the AAT DD contributions.")
 
     no = C2_R_pos.shape[0]
     nv = C2_R_pos.shape[2]
@@ -529,67 +729,62 @@ def AAT_DD_element(R_disp, B_disp, C2_R_pos, C2_R_neg, C2_B_pos, C2_B_neg, S, or
 
     pp = pm = mp = mm = 0.0
     if orbitals == 'SPATIAL':
-        for ia in range(no*nv):
-            i = ia // nv; I = i + nfzc
-            a = ia % nv; A = a + no + nfzc
-            for jb in range(ia+1):
-                j = jb // nv; J = j + nfzc
-                b = jb % nv; B = b + no + nfzc
-
-                pref_bra = 2/(1 + float(ia == jb))
-
-                for kc in range(no*nv):
-                    k = kc // nv; K = k + nfzc
-                    c = kc % nv; C = c + no + nfzc
-                    for ld in range(kc+1):
-                        l = ld // nv; L = l + nfzc
-                        d = ld % nv; D = d + no + nfzc
-
-                        pref_ket = 2/(1 + float(kc == ld))
-                        pref = pref_bra * pref_ket
-
-                        C2_R = C2_R_pos; C2_B = C2_B_pos; disp = 0; val = 0
-                        pp += pref * AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc)
-
-                        C2_R = C2_R_pos; C2_B = C2_B_neg; disp = 1; val = 0
-                        pm += pref * AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc)
-
-                        C2_R = C2_R_neg; C2_B = C2_B_pos; disp = 2; val = 0
-                        mp += pref * AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc)
-
-                        C2_R = C2_R_neg; C2_B = C2_B_neg; disp = 3; val = 0
-                        mm += pref * AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc)
-
-#        pref = 1
-#        for i in range(no):
-#            I = i + nfzc
-#            for a in range(nv):
-#                A = a + no + nfzc
-#                for j in range(no):
-#                    J = j + nfzc
-#                    for b in range(nv):
-#                        B = b + no + nfzc
-#                        for k in range(no):
-#                            K = k + nfzc
-#                            for c in range(nv):
-#                                C = c + no + nfzc
-#                                for l in range(no):
-#                                    L = l + nfzc
-#                                    for d in range(nv):
-#                                        D = d + no + nfzc
-#
-#                                        C2_R = C2_R_pos; C2_B = C2_B_pos; disp = 0; val = 0
-#                                        pp += pref * AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc)
-#
-#                                        C2_R = C2_R_pos; C2_B = C2_B_neg; disp = 1; val = 0
-#                                        pm += pref * AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc)
-#
-#                                        C2_R = C2_R_neg; C2_B = C2_B_pos; disp = 2; val = 0
-#                                        mp += pref * AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc)
-#
-#                                        C2_R = C2_R_neg; C2_B = C2_B_neg; disp = 3; val = 0
-#                                        mm += pref * AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc)
-#
+        if loops == 'RESTRICTED':
+            for ia in range(no*nv):
+                i = ia // nv; I = i + nfzc
+                a = ia % nv; A = a + no + nfzc
+                for jb in range(ia+1):
+                    j = jb // nv; J = j + nfzc
+                    b = jb % nv; B = b + no + nfzc
+    
+                    pref_bra = 2/(1 + float(ia == jb))
+    
+                    for kc in range(no*nv):
+                        k = kc // nv; K = k + nfzc
+                        c = kc % nv; C = c + no + nfzc
+                        for ld in range(kc+1):
+                            l = ld // nv; L = l + nfzc
+                            d = ld % nv; D = d + no + nfzc
+    
+                            pref_ket = 2/(1 + float(kc == ld))
+                            pref = pref_bra * pref_ket
+    
+                            C2_R = C2_R_pos; C2_B = C2_B_pos; disp = 0; val = 0
+                            pp += pref * AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc)
+                            C2_R = C2_R_pos; C2_B = C2_B_neg; disp = 1; val = 0
+                            pm += pref * AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc)
+                            C2_R = C2_R_neg; C2_B = C2_B_pos; disp = 2; val = 0
+                            mp += pref * AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc)
+                            C2_R = C2_R_neg; C2_B = C2_B_neg; disp = 3; val = 0
+                            mm += pref * AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc)
+    
+        elif loops == 'FULL':
+            for i in range(no):
+                I = i + nfzc
+                for a in range(nv):
+                    A = a + no + nfzc
+                    for j in range(no):
+                        J = j + nfzc
+                        for b in range(nv):
+                            B = b + no + nfzc
+                            for k in range(no):
+                                K = k + nfzc
+                                for c in range(nv):
+                                    C = c + no + nfzc
+                                    for l in range(no):
+                                        L = l + nfzc
+                                        for d in range(nv):
+                                            D = d + no + nfzc
+    
+                                            C2_R = C2_R_pos; C2_B = C2_B_pos; disp = 0; val = 0
+                                            pp += AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc)
+                                            C2_R = C2_R_pos; C2_B = C2_B_neg; disp = 1; val = 0
+                                            pm += AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc)
+                                            C2_R = C2_R_neg; C2_B = C2_B_pos; disp = 2; val = 0
+                                            mp += AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc)
+                                            C2_R = C2_R_neg; C2_B = C2_B_neg; disp = 3; val = 0
+                                            mm += AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc)
+    
 
     elif orbitals == 'SPIN':
         for ia in range(no*nv):
@@ -631,6 +826,7 @@ def AAT_DD_element(R_disp, B_disp, C2_R_pos, C2_R_neg, C2_B_pos, C2_B_neg, S, or
     
     return (((pp - pm - mp + mm)/(4*R_disp*B_disp))).imag
 
+# Compute a piece of the DD contribution to an AAT tensor element
 def AAT_DD_ijab_klcd_spatial(i, j, a, b, k, l, c, d, disp, C2_R, C2_B, S, o, nfzc):
     orbitals = 'SPATIAL'
     no = C2_R.shape[0]
