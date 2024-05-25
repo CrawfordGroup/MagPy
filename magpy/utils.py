@@ -170,7 +170,7 @@ class DIIS(object):
                 B[n1, n2] = np.dot(e1.conj(), e2)
                 B[n2, n1] = B[n1, n2]
 
-        B[:-1, :-1] /= np.abs(B[:-1, :-1]).max()
+#        B[:-1, :-1] /= np.abs(B[:-1, :-1]).max()
 
         A = np.zeros((self.diis_size+1))
         A[-1] = -1
