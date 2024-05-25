@@ -30,7 +30,7 @@ units bohr
             """)
 
     apt = magpy.APT(mol)
-    R_disp = 0.001
+    R_disp = 0.0005
     F_disp = 0.0001
     e_conv = 1e-13
     r_conv = 1e-13
