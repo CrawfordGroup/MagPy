@@ -21,8 +21,8 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-latest]
-        python-version: ['3.9']
+        os: [macOS-latest, ubuntu-latest]
+        python-version: ['3,8', '3.9', '3.10', '3.11']
 
     steps:
     - uses: actions/checkout@v3
@@ -67,7 +67,7 @@ jobs:
     - name: Test and generate coverage report
       run: |
         pip install coverage
-        coverage run -m pytest magpy/tests/test_011_APT_HF.py
+        coverage run -m pytest
         coverage xml 
         ls -l
 
